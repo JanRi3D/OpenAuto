@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Provisional display name; change here only. -->
+    <string name="app_name">OpenAuto</string>
+    <string name="android_auto">Android Auto</string>
+    <string name="back">Back</string>
+    <string name="settings">Settings</string>
+
+    <!-- Launcher tiles -->
+    <string name="wireless">Wireless</string>
+    <string name="wired">Wired</string>
+    <string name="self_mode">Self Mode</string>
+    <string name="self_mode_sub">Use the head unit on its own</string>
+    <string name="settings_sub">Video, audio, connections</string>
+
+    <!-- Header / tile status lines (only ever set from the real session state) -->
+    <string name="status_no_phone">No phone connected</string>
+    <string name="status_phone_usb">Phone on USB</string>
+    <string name="status_phone_wireless">Phone in range</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_projecting">Projecting</string>
+    <string name="status_error">Connection failed</string>
+    <string name="wireless_waiting">Waiting for phone</string>
+    <string name="wireless_found">Phone found, tap to start</string>
+    <string name="wireless_no_bt">Bluetooth not available to apps</string>
+    <string name="wireless_manual_hint">Tap for manual Wi-Fi connection</string>
+    <string name="wired_plug_in">Plug in a USB cable</string>
+    <string name="wired_found">Phone detected, tap to start</string>
+    <string name="wired_no_host">USB host not supported</string>
+    <string name="wired_permission">Waiting for USB permission</string>
+
+    <!-- Self mode -->
+    <string name="self_title">Self Mode</string>
+    <string name="self_unavailable_api">Unavailable: the Android Auto app needs Android 9 or newer. This device runs Android %1$s.</string>
+    <string name="self_unavailable_app">Unavailable: the Android Auto app (com.google.android.projection.gearhead) is not installed on this device.</string>
+    <string name="self_howto">Open Android Auto settings on this device, enable developer settings (tap the version 10 times) and turn on “Start head unit server”. Then tap Self Mode again.</string>
+    <string name="self_not_listening">Android Auto is installed but no head unit server is listening on port %1$d.</string>
+    <string name="self_open_aa">Open Android Auto</string>
+
+    <!-- Settings navigation -->
+    <string name="cat_general">General</string>
+    <string name="cat_video">Video</string>
+    <string name="cat_audio">Audio</string>
+    <string name="cat_input">Input</string>
+    <string name="cat_bluetooth">Bluetooth</string>
+    <string name="cat_wireless">Wireless</string>
+    <string name="cat_diagnostics">Diagnostics</string>
+
+    <!-- Common -->
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="reconnect_note">Applies the next time a phone connects.</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="connect">Connect</string>
+    <string name="not_available">Not available</string>
+    <string name="unknown">Unknown</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <!-- General -->
+    <string name="set_keep_screen_on">Keep screen on</string>
+    <string name="set_keep_screen_on_desc">While Android Auto is projecting</string>
+    <string name="set_auto_start">Start when a phone is found</string>
+    <string name="set_auto_start_desc">Begin projection as soon as a phone is detected</string>
+    <string name="set_diagnostics">Diagnostics</string>
+    <string name="set_diagnostics_desc">Hardware, memory and decoder information</string>
+    <string name="set_reset">Reset settings</string>
+    <string name="set_reset_desc">Back to the defaults for this device</string>
+    <string name="reset_done">Settings reset</string>
+
+    <!-- Video -->
+    <string name="set_resolution">Resolution</string>
+    <string name="set_resolution_desc">Picture size the phone sends</string>
+    <string name="res_480">480p</string>
+    <string name="res_720">720p</string>
+    <string name="res_1080">1080p</string>
+    <string name="res_unsupported">%1$s: this device’s H.264 decoder did not accept that size</string>
+    <string name="set_fit">Screen fit</string>
+    <string name="set_fit_desc">Fill uses the whole screen; Bars shows the full picture with bars beside it</string>
+    <string name="fit_fill">Fill</string>
+    <string name="fit_bars">Bars</string>
+    <string name="set_output">Video output</string>
+    <string name="set_output_desc">Squeezed or shifted picture: try the next one. Compatible is always right, but can be slow</string>
+    <string name="output_stream">Direct 2</string>
+    <string name="output_auto">Auto</string>
+    <string name="output_gpu">Compatible</string>
+    <string name="output_direct">Direct</string>
+    <string name="set_decoder">Decoder</string>
+    <string name="set_decoder_desc">Hardware is faster; try Software if the picture is broken</string>
+    <string name="decoder_hw">Hardware</string>
+    <string name="decoder_sw">Software</string>
+    <string name="set_fps">Frame rate</string>
+    <string name="set_fps_desc">Higher is smoother, needs more power</string>
+    <string name="fps_30">30 fps</string>
+    <string name="fps_60">60 fps</string>
+    <string name="set_dpi">Screen DPI</string>
+    <string name="set_dpi_desc">Lower fits more on the screen</string>
+    <string name="set_night">Night mode</string>
+    <string name="set_night_desc">Colours Android Auto uses</string>
+    <string name="night_day">Day</string>
+    <string name="night_night">Night</string>
+    <string name="night_auto">Auto</string>
+    <string name="night_auto_desc">Auto: night colours from 20:00 to 07:00 by the clock (no light sensor is used)</string>
+
+    <!-- Audio -->
+    <string name="set_audio_media">Media audio</string>
+    <string name="set_audio_media_desc">Music and podcasts from the phone, 48 kHz stereo</string>
+    <string name="set_audio_speech">Navigation and assistant audio</string>
+    <string name="set_audio_speech_desc">Turn-by-turn guidance and voice replies, 16 kHz</string>
+    <string name="set_mic">Microphone</string>
+    <string name="set_mic_desc">Lets the phone’s assistant hear you, 16 kHz mono</string>
+    <string name="mic_unavailable">This device reports no microphone</string>
+
+    <!-- Input -->
+    <string name="set_media_keys">Hardware media keys</string>
+    <string name="set_media_keys_desc">Send play, pause, next and previous to the phone</string>
+    <string name="set_back_key">Back key during projection</string>
+    <string name="set_back_key_desc">What the device’s Back key does while Android Auto is shown</string>
+    <string name="back_exit">Exit</string>
+    <string name="back_phone">Send to phone</string>
+
+    <!-- Bluetooth -->
+    <string name="set_bt_state">Bluetooth adapter</string>
+    <string name="set_bt_state_desc">Needed for automatic wireless connection</string>
+    <string name="bt_none">No adapter accessible to apps</string>
+    <string name="bt_off">Off</string>
+    <string name="bt_on">On · %1$s</string>
+    <string name="bt_permission">Allow Bluetooth access</string>
+    <string name="bt_permission_desc">Android 12 and newer ask before an app may use Bluetooth</string>
+    <string name="set_bt_discoverable">Make discoverable</string>
+    <string name="set_bt_discoverable_desc">Pair a new phone from the phone’s Bluetooth settings</string>
+    <string name="set_bt_phone">Phone for wireless</string>
+    <string name="set_bt_phone_desc">Paired phone used for automatic connection</string>
+    <string name="bt_phone_none">None selected</string>
+    <string name="bt_pick_title">Choose a paired phone</string>
+    <string name="bt_no_bonded">No paired devices</string>
+
+    <!-- Wireless -->
+    <string name="set_wireless_auto">Automatic connection</string>
+    <string name="set_wireless_auto_desc">Bluetooth handshake, then Wi-Fi projection</string>
+    <string name="wireless_auto_needs_bt">Needs a Bluetooth adapter apps can use</string>
+    <string name="wireless_auto_needs_ap">This device cannot start a Wi-Fi hotspot from an app</string>
+    <string name="set_hotspot">Head unit hotspot</string>
+    <string name="set_hotspot_desc">Network the phone joins for projection</string>
+    <string name="set_manual">Manual connection</string>
+    <string name="set_manual_desc">Enter the phone’s IP. Needs “Start head unit server” in Android Auto developer settings.</string>
+    <string name="manual_title">Connect to phone</string>
+    <string name="manual_ip_hint">Phone IP address</string>
+    <string name="manual_port_hint">Port</string>
+    <string name="set_auto_reconnect">Reconnect automatically</string>
+    <string name="set_auto_reconnect_desc">Retry when a connection drops</string>
+
+    <!-- Diagnostics labels -->
+    <string name="diag_android">Android</string>
+    <string name="diag_api">API level</string>
+    <string name="diag_device">Device</string>
+    <string name="diag_abi">CPU ABI</string>
+    <string name="diag_screen">Screen</string>
+    <string name="diag_density">Density</string>
+    <string name="diag_mem_total">Total RAM</string>
+    <string name="diag_mem_avail">Available RAM</string>
+    <string name="diag_mem_low">Low memory</string>
+    <string name="diag_heap">App heap limit</string>
+    <string name="diag_heap_large">Large heap limit</string>
+    <string name="diag_heap_used">Java heap in use</string>
+    <string name="diag_native">Native heap</string>
+    <string name="diag_pss">Process PSS</string>
+    <string name="diag_usb_host">USB host</string>
+    <string name="diag_usb_devices">USB devices attached</string>
+    <string name="diag_wifi">Wi-Fi</string>
+    <string name="diag_wifi_ap">Wi-Fi hotspot API</string>
+    <string name="diag_wifi_5g">5 GHz</string>
+    <string name="diag_bt">Bluetooth</string>
+    <string name="diag_mic">Microphone</string>
+    <string name="diag_decoders">H.264 decoders</string>
+    <string name="diag_decoder_none">None found</string>
+    <string name="diag_probe">Decoder accepts</string>
+    <string name="diag_probe_running">Probing…</string>
+    <string name="diag_ip">IP addresses</string>
+    <string name="diag_hw_accel">Hardware UI acceleration</string>
+
+    <!-- Connection phases and errors -->
+    <string name="phase_switching">Switching the phone to accessory mode…</string>
+    <string name="phase_version">Negotiating protocol version…</string>
+    <string name="phase_handshake">Securing the connection…</string>
+    <string name="phase_discovery">Exchanging capabilities…</string>
+    <string name="phase_ready">Connected to %1$s, starting Android Auto…</string>
+    <string name="phase_waiting_video">Waiting for video from the phone…</string>
+    <string name="phase_decoder_error">Video decoder problem: %1$s</string>
+    <string name="err_no_usb_device">No USB device attached. Plug the phone into the head unit’s USB port.</string>
+    <string name="err_aoa">The phone did not accept accessory mode: %1$s</string>
+    <string name="err_aoa_timeout">The phone did not reappear in accessory mode. Unlock it and allow Android Auto, then try again.</string>
+    <string name="err_usb_permission">USB permission was not granted</string>
+    <string name="err_usb_detached">USB cable disconnected</string>
+    <string name="err_tcp">Could not reach %1$s:%2$d (%3$s). Is “Start head unit server” on and both devices on the same network?</string>
+    <string name="err_credentials">Head unit certificate could not be loaded: %1$s</string>
+    <string name="stopped_by_user">Stopped</string>
+    <string name="notification_text">Android Auto session active</string>
+    <string name="wireless_tap_manual">Tap to connect to %1$s</string>
+    <string name="wireless_setup_first">Set up in Settings › Wireless</string>
+    <string name="diag_crypto">Encryption speed</string>
+    <string name="diag_usb_list">USB devices</string>
+    <string name="diag_log">Connection log</string>
+    <string name="diag_log_empty">No connection attempts yet</string>
+    <string name="phase_hotspot">Starting the head unit hotspot…</string>
+    <string name="phase_reconnecting">Connection lost (%1$s). Reconnecting…</string>
+    <string name="connection_failed">Connection failed: %1$s. Tap ✕ to go back.</string>
+    <string name="status_reconnecting">Reconnecting…</string>
+    <string name="status_return">Connected, tap to return</string>
+    <string name="phase_wireless_waiting">Waiting for the phone over Bluetooth…</string>
+    <string name="err_bt_off">Bluetooth is off and could not be turned on</string>
+    <string name="err_bt_none">This device has no Bluetooth adapter apps can use</string>
+    <string name="err_bt_no_phone">Choose the paired phone in Settings › Bluetooth first</string>
+    <string name="err_hotspot_unsupported">This device cannot start a Wi-Fi hotspot from an app</string>
+    <string name="err_location_permission">Android 8 and newer need the location permission to start a hotspot</string>
+    <string name="wireless_auto_waiting">Tap to wait for a paired phone</string>
+    <string name="mic_permission">Allow microphone access</string>
+    <string name="mic_permission_desc">Needed so the phone’s assistant can hear you</string>
+</resources>

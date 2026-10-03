@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/page_pad">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/header_h">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/back_h"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_back"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="22dp">
+
+            <me.ri3d.openauto.ui.IconView
+                android:layout_width="@dimen/back_icon"
+                android:layout_height="@dimen/back_icon"
+                app:icon="arrow_left"
+                app:iconColor="@color/fg"
+                app:iconStroke="2.25" />
+
+            <me.ri3d.openauto.ui.BarlowText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:includeFontPadding="false"
+                android:text="@string/back"
+                android:textColor="@color/fg"
+                android:textSize="@dimen/back_text"
+                app:font="semibold" />
+        </LinearLayout>
+
+        <me.ri3d.openauto.ui.BarlowText
+            android:id="@+id/screen_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="20dp"
+            android:layout_toRightOf="@id/back"
+            android:includeFontPadding="false"
+            android:text="@string/settings"
+            android:textColor="@color/fg"
+            android:textSize="@dimen/wordmark"
+            app:font="condensed"
+            app:wordmark="true" />
+
+        <me.ri3d.openauto.ui.ClockView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:includeFontPadding="false"
+            android:textColor="@color/fg"
+            android:textSize="@dimen/clock" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/gap_v"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <ScrollView
+            android:layout_width="@dimen/nav_w"
+            android:layout_height="match_parent"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/nav"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="@dimen/gap_h"
+            android:layout_weight="1"
+            android:background="@drawable/bg_panel">
+
+            <ScrollView
+                android:id="@+id/scroll"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/rows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingLeft="@dimen/panel_pad"
+                    android:paddingRight="@dimen/panel_pad" />
+            </ScrollView>
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

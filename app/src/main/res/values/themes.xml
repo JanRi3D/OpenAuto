@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.OpenAuto" parent="android:Theme.Holo.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:textColor">@color/fg</item>
+    </style>
+    <!-- Black window; nothing but the video Surface is drawn during projection. -->
+    <style name="Theme.OpenAuto.Projection" parent="android:Theme.Holo.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>

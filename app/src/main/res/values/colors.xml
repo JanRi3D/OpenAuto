@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palette taken from the "B - Launch first" reference artboard. -->
+    <color name="bg">#0E1113</color>
+    <color name="fg">#EEF2F4</color>
+    <color name="muted">#A9B4BB</color>
+    <color name="accent">#F5B83D</color>
+    <color name="accent_pressed">#E3A62E</color>
+    <color name="on_accent">#14110A</color>
+    <color name="on_accent_sub">#2B2108</color>
+    <color name="on_accent_well">#2414110A</color>
+    <color name="tile">#171C20</color>
+    <color name="tile_pressed">#1F262B</color>
+    <color name="tile_border">#262E34</color>
+    <color name="well">#222A30</color>
+    <color name="nav_active_border">#36424A</color>
+    <color name="segment_text">#C9D2D8</color>
+    <color name="danger">#F0735A</color>
+    <color name="ok">#5FD6B0</color>
+</resources>

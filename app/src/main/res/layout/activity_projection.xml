@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- The stage is the display area for video. ProjectionActivity adds the video view (a SurfaceView,
+         or a TextureView when the frame's black margins have to be cropped away) in code. -->
+    <FrameLayout
+        android:id="@+id/stage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <me.ri3d.openauto.ui.BarlowText
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_margin="@dimen/page_pad"
+        android:background="@drawable/bg_back"
+        android:paddingLeft="18dp"
+        android:paddingTop="12dp"
+        android:paddingRight="18dp"
+        android:paddingBottom="12dp"
+        android:textColor="@color/fg"
+        android:textSize="@dimen/status_text"
+        app:font="medium" />
+
+    <FrameLayout
+        android:id="@+id/close"
+        android:layout_width="@dimen/back_h"
+        android:layout_height="@dimen/back_h"
+        android:layout_gravity="top|right"
+        android:layout_margin="@dimen/gap_h"
+        android:alpha="0.6"
+        android:background="@drawable/bg_back"
+        android:clickable="true"
+        android:focusable="true">
+
+        <me.ri3d.openauto.ui.IconView
+            android:layout_width="@dimen/back_icon"
+            android:layout_height="@dimen/back_icon"
+            android:layout_gravity="center"
+            app:icon="close"
+            app:iconColor="@color/fg"
+            app:iconStroke="2.25" />
+    </FrameLayout>
+</FrameLayout>

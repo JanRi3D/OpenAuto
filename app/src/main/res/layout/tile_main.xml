@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_tile"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:padding="@dimen/tile_pad">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <FrameLayout
+            android:id="@+id/well"
+            android:layout_width="@dimen/well"
+            android:layout_height="@dimen/well"
+            android:background="@drawable/bg_well">
+
+            <me.ri3d.openauto.ui.IconView
+                android:id="@+id/icon"
+                android:layout_width="@dimen/well_icon"
+                android:layout_height="@dimen/well_icon"
+                android:layout_gravity="center"
+                app:icon="wifi"
+                app:iconColor="@color/accent" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/arrow_ring"
+            android:layout_width="@dimen/arrow_circle"
+            android:layout_height="@dimen/arrow_circle"
+            android:layout_alignParentRight="true">
+
+            <me.ri3d.openauto.ui.IconView
+                android:id="@+id/arrow"
+                android:layout_width="@dimen/arrow_icon"
+                android:layout_height="@dimen/arrow_icon"
+                android:layout_gravity="center"
+                app:icon="arrow_right"
+                app:iconColor="@color/muted"
+                app:iconStroke="2.25" />
+        </FrameLayout>
+    </RelativeLayout>
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <me.ri3d.openauto.ui.BarlowText
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        android:textColor="@color/fg"
+        android:textSize="@dimen/tile_title"
+        app:font="condensed" />
+
+    <me.ri3d.openauto.ui.BarlowText
+        android:id="@+id/subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:includeFontPadding="false"
+        android:text="@string/android_auto"
+        android:textColor="@color/fg"
+        android:textSize="@dimen/tile_sub"
+        app:font="semibold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/tile_status_mt"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/dot"
+            android:layout_width="@dimen/dot"
+            android:layout_height="@dimen/dot" />
+
+        <me.ri3d.openauto.ui.BarlowText
+            android:id="@+id/status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_weight="1"
+            android:includeFontPadding="false"
+            android:maxLines="2"
+            android:textColor="@color/muted"
+            android:textSize="@dimen/tile_status"
+            app:font="medium" />
+    </LinearLayout>
+</LinearLayout>

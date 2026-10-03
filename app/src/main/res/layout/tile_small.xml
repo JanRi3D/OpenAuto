@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_tile"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:padding="@dimen/tile_pad_small">
+
+    <FrameLayout
+        android:id="@+id/well"
+        android:layout_width="@dimen/small_well"
+        android:layout_height="@dimen/small_well"
+        android:background="@drawable/bg_small_well">
+
+        <me.ri3d.openauto.ui.IconView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/small_icon"
+            android:layout_height="@dimen/small_icon"
+            android:layout_gravity="center"
+            app:icon="self"
+            app:iconColor="@color/accent" />
+    </FrameLayout>
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <me.ri3d.openauto.ui.BarlowText
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        android:textColor="@color/fg"
+        android:textSize="@dimen/small_title"
+        app:font="condensed" />
+
+    <me.ri3d.openauto.ui.BarlowText
+        android:id="@+id/subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:includeFontPadding="false"
+        android:maxLines="2"
+        android:textColor="@color/muted"
+        android:textSize="@dimen/small_sub"
+        app:font="regular" />
+</LinearLayout>
