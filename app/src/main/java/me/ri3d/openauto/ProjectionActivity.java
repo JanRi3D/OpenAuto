@@ -1,14 +1,17 @@
 package me.ri3d.openauto;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Matrix;
+import android.graphics.SurfaceTexture;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.graphics.Matrix;
-import android.graphics.SurfaceTexture;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -17,10 +20,12 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.window.OnBackInvokedDispatcher;
 
 import me.ri3d.openauto.aa.Session;
 import me.ri3d.openauto.aa.VideoGeometry;
 import me.ri3d.openauto.aa.Wire;
+import me.ri3d.openauto.diag.Decoders;
 import me.ri3d.openauto.media.VideoDecoder;
 import me.ri3d.openauto.ui.Insets;
 
@@ -60,7 +65,7 @@ public class ProjectionActivity extends Activity implements ConnectionManager.Li
             cm.stop();
             finish();
         });
-        if (android.os.Build.VERSION.SDK_INT >= 33) Api33.registerBack(this, this::onBack);
+        if (Build.VERSION.SDK_INT >= 33) Api33.registerBack(this, this::onBack);
         // Android 6+: the assistant needs the microphone; ask once here rather than failing silently later.
         if (cm.prefs().mic() && !Perms.hasMic(this)) Perms.requestMic(this);
     }
@@ -123,8 +128,8 @@ public class ProjectionActivity extends Activity implements ConnectionManager.Li
         boolean plain = !cropped && size[0] == w && size[1] == h;
         String output = cm.prefs().videoOut();
         if ("auto".equals(output)) {
-            boolean oldWithHardwareDecoder = android.os.Build.VERSION.SDK_INT < 21 && !"sw".equals(cm.prefs().decoder())
-                    && me.ri3d.openauto.diag.Decoders.hasHardware();
+            boolean oldWithHardwareDecoder = Build.VERSION.SDK_INT < 21 && !"sw".equals(cm.prefs().decoder())
+                    && Decoders.hasHardware();
             output = oldWithHardwareDecoder ? "direct" : "gpu";
         }
         boolean texture = !plain && "gpu".equals(output) && stage.isHardwareAccelerated();
@@ -245,7 +250,7 @@ public class ProjectionActivity extends Activity implements ConnectionManager.Li
     }
 
     @Override
-    @android.annotation.SuppressLint("GestureBackNavigation") // head units have a hardware Back key; predictive back is API 33+
+    @SuppressLint("GestureBackNavigation") // head units have a hardware Back key; predictive back is API 33+
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             onBack();
@@ -272,11 +277,11 @@ public class ProjectionActivity extends Activity implements ConnectionManager.Li
     }
 
     /** Android 13+ delivers the Back gesture through a callback instead of a key event. */
-    @android.annotation.TargetApi(33)
+    @TargetApi(33)
     private static final class Api33 {
         static void registerBack(Activity a, final Runnable onBack) {
             a.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
-                    android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, onBack::run);
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, onBack::run);
         }
     }
 

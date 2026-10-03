@@ -8,6 +8,7 @@ import android.media.MediaFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -55,7 +56,7 @@ public final class Decoders {
     }
 
     public static boolean isSoftware(String name) {
-        String n = name.toLowerCase(java.util.Locale.ROOT);
+        String n = name.toLowerCase(Locale.ROOT);
         return n.startsWith("omx.google.") || n.startsWith("c2.android.") || n.contains(".sw.") || n.contains("ffmpeg");
     }
 

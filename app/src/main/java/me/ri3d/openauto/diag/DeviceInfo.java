@@ -4,9 +4,12 @@ import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
+import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Debug;
@@ -25,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 
 import me.ri3d.openauto.R;
+import me.ri3d.openauto.transport.UsbKinds;
 
 /**
  * Facts about the device for the Diagnostics screen and for capability gating.
@@ -55,7 +59,7 @@ public final class DeviceInfo {
         try {
             WifiManager wm = (WifiManager) ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wm == null) return false;
-            wm.getClass().getMethod("setWifiApEnabled", android.net.wifi.WifiConfiguration.class, boolean.class);
+            wm.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
             return true;
         } catch (Throwable t) {
             return false;
@@ -104,7 +108,7 @@ public final class DeviceInfo {
         d.getMetrics(m);
         String size = m.widthPixels + " x " + m.heightPixels + " px";
         if (Build.VERSION.SDK_INT >= 17) {
-            android.graphics.Point p = new android.graphics.Point();
+            Point p = new Point();
             d.getRealSize(p);
             if (p.x != m.widthPixels || p.y != m.heightPixels) size += " (panel " + p.x + " x " + p.y + ")";
         }
@@ -135,9 +139,9 @@ public final class DeviceInfo {
             UsbManager um = (UsbManager) ctx.getSystemService(Context.USB_SERVICE);
             out.add(row(ctx, R.string.diag_usb_devices, um == null ? null : String.valueOf(um.getDeviceList().size())));
             if (um != null) {
-                for (android.hardware.usb.UsbDevice dev : um.getDeviceList().values()) {
-                    out.add(row(ctx, R.string.diag_usb_list, me.ri3d.openauto.transport.UsbKinds.describe(dev)
-                            + (me.ri3d.openauto.transport.UsbKinds.looksLikePhone(dev) ? ", phone" : ", not a phone")));
+                for (UsbDevice dev : um.getDeviceList().values()) {
+                    out.add(row(ctx, R.string.diag_usb_list, UsbKinds.describe(dev)
+                            + (UsbKinds.looksLikePhone(dev) ? ", phone" : ", not a phone")));
                 }
             }
         } catch (RuntimeException e) {

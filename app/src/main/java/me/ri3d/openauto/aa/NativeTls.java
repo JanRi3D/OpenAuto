@@ -2,6 +2,7 @@ package me.ri3d.openauto.aa;
 
 import java.io.IOException;
 import java.util.Arrays;
+import javax.net.ssl.SSLContext;
 
 /**
  * TLS through the device's own OpenSSL, reached by the JNI shim in src/main/cpp/systls.c.
@@ -45,7 +46,7 @@ public final class NativeTls implements Tls {
         }
         try {
             // Makes the platform set OpenSSL's locking callbacks before another thread shares the library.
-            javax.net.ssl.SSLContext.getInstance("TLS").init(null, null, null);
+            SSLContext.getInstance("TLS").init(null, null, null);
         } catch (Exception | LinkageError ignored) {
         }
         try {

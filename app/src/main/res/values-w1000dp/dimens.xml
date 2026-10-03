@@ -53,5 +53,4 @@
     <dimen name="stepper_value_w">88dp</dimen>
     <dimen name="stepper_value_text">24dp</dimen>
     <dimen name="diag_text">17dp</dimen>
-    <dimen name="touch_min">48dp</dimen>
 </resources>

@@ -1,27 +1,37 @@
 package me.ri3d.openauto;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
+import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
+import me.ri3d.openauto.aa.NativeTls;
 import me.ri3d.openauto.aa.Session;
 import me.ri3d.openauto.aa.TlsCredentials;
 import me.ri3d.openauto.aa.VideoGeometry;
@@ -32,7 +42,10 @@ import me.ri3d.openauto.settings.Prefs;
 import me.ri3d.openauto.transport.Aoa;
 import me.ri3d.openauto.transport.TcpTransport;
 import me.ri3d.openauto.transport.Transport;
+import me.ri3d.openauto.transport.UsbKinds;
 import me.ri3d.openauto.transport.UsbTransport;
+import me.ri3d.openauto.wireless.Hotspot;
+import me.ri3d.openauto.wireless.WirelessServer;
 
 /**
  * App-wide owner of the single active connection attempt. Runs the USB accessory handshake, opens
@@ -75,8 +88,8 @@ public final class ConnectionManager implements Session.Listener {
     private String lastError;
     private boolean usbMode;
     private boolean wirelessMode;
-    private me.ri3d.openauto.wireless.Hotspot hotspot;
-    private me.ri3d.openauto.wireless.WirelessServer wireless;
+    private Hotspot hotspot;
+    private WirelessServer wireless;
     private boolean userStopped;
     private int retries;
     private String manualHost;
@@ -94,7 +107,7 @@ public final class ConnectionManager implements Session.Listener {
     private final Handler sender;
     private volatile int areaW, areaH; // size of the projection stage in pixels, once known
 
-    @android.annotation.SuppressLint("UnspecifiedRegisterReceiverFlag") // flag passed on API 33+; older APIs have no flag parameter
+    @SuppressLint("UnspecifiedRegisterReceiverFlag") // flag passed on API 33+; older APIs have no flag parameter
     private ConnectionManager(Context app) {
         this.app = app;
         prefs = new Prefs(app);
@@ -170,7 +183,7 @@ public final class ConnectionManager implements Session.Listener {
 
     private static String timestamp() {
         long ms = System.currentTimeMillis() % 86400000L;
-        return String.format(java.util.Locale.US, "%02d:%02d:%02d.%03d", ms / 3600000, (ms / 60000) % 60, (ms / 1000) % 60, ms % 1000);
+        return String.format(Locale.US, "%02d:%02d:%02d.%03d", ms / 3600000, (ms / 60000) % 60, (ms / 1000) % 60, ms % 1000);
     }
 
     // ---- USB -----------------------------------------------------------------------------------
@@ -184,13 +197,13 @@ public final class ConnectionManager implements Session.Listener {
         UsbDevice fallback = null;
         for (UsbDevice d : usb.getDeviceList().values()) {
             if (Aoa.isAccessory(d)) return d;
-            if (fallback == null && me.ri3d.openauto.transport.UsbKinds.looksLikePhone(d)) fallback = d;
+            if (fallback == null && UsbKinds.looksLikePhone(d)) fallback = d;
         }
         return fallback;
     }
 
     public boolean usbHostAvailable() {
-        return usb != null && app.getPackageManager().hasSystemFeature(android.content.pm.PackageManager.FEATURE_USB_HOST);
+        return usb != null && app.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
     }
 
     /** Starts the wired flow with the given device, or with the first candidate found. */
@@ -390,17 +403,17 @@ public final class ConnectionManager implements Session.Listener {
     // ---- automatic wireless ------------------------------------------------------------------------
 
     /** Bluetooth handshake + hotspot + TCP 5288 (protocol-reference §11). Needs a paired phone chosen in Settings. */
-    @android.annotation.SuppressLint("MissingPermission") // Perms.hasBluetooth() checked first
+    @SuppressLint("MissingPermission") // Perms.hasBluetooth() checked first
     public void startWireless() {
         if (isBusy()) return;
         userStopped = false;
         retries = 0;
         usbMode = false;
         wirelessMode = true;
-        android.bluetooth.BluetoothAdapter bt = android.bluetooth.BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
         if (bt == null) { setPhase(Phase.ERROR, app.getString(R.string.err_bt_none)); return; }
         if (!Perms.hasBluetooth(app)) { setPhase(Phase.ERROR, app.getString(R.string.bt_permission)); return; }
-        if (!me.ri3d.openauto.wireless.Hotspot.supported(app)) { setPhase(Phase.ERROR, app.getString(R.string.err_hotspot_unsupported)); return; }
+        if (!Hotspot.supported(app)) { setPhase(Phase.ERROR, app.getString(R.string.err_hotspot_unsupported)); return; }
         if (!Perms.hasHotspot(app)) { setPhase(Phase.ERROR, app.getString(R.string.err_location_permission)); return; }
         if (!bt.isEnabled()) {
             bt.enable();
@@ -412,18 +425,18 @@ public final class ConnectionManager implements Session.Listener {
         }
         final String phoneMac = prefs.btPhone();
         if (prefs.apSsid() == null) {
-            java.security.SecureRandom rnd = new java.security.SecureRandom();
-            prefs.put(Prefs.AP_SSID, "OPENAUTO-" + Integer.toHexString(0x1000 + rnd.nextInt(0xEFFF)).toUpperCase(java.util.Locale.ROOT));
+            SecureRandom rnd = new SecureRandom();
+            prefs.put(Prefs.AP_SSID, "OPENAUTO-" + Integer.toHexString(0x1000 + rnd.nextInt(0xEFFF)).toUpperCase(Locale.ROOT));
             prefs.put(Prefs.AP_PASS, Long.toString(Math.abs(rnd.nextLong()), 36).substring(0, 10));
         }
         setPhase(Phase.HOTSPOT, null);
-        hotspot = new me.ri3d.openauto.wireless.Hotspot(app);
-        final android.bluetooth.BluetoothAdapter adapter = bt;
-        hotspot.start(prefs.apSsid(), prefs.apPass(), new me.ri3d.openauto.wireless.Hotspot.Callback() {
+        hotspot = new Hotspot(app);
+        final BluetoothAdapter adapter = bt;
+        hotspot.start(prefs.apSsid(), prefs.apPass(), new Hotspot.Callback() {
             @Override
             public void onStarted(String ssid, String passphrase, String bssid, String ip) {
                 if (phase != Phase.HOTSPOT) return;
-                wireless = new me.ri3d.openauto.wireless.WirelessServer(new me.ri3d.openauto.wireless.WirelessServer.Listener() {
+                wireless = new WirelessServer(new WirelessServer.Listener() {
                     @Override public void onLog(String line) { addLog(line); }
                     @Override public void onPhone(final Socket socket) {
                         main.post(() -> {
@@ -440,8 +453,8 @@ public final class ConnectionManager implements Session.Listener {
                     }
                 });
                 try {
-                    lastWifiInfo = new me.ri3d.openauto.wireless.WirelessServer.WifiInfo(ssid, passphrase, bssid, ip,
-                            me.ri3d.openauto.wireless.WirelessServer.TCP_PORT);
+                    lastWifiInfo = new WirelessServer.WifiInfo(ssid, passphrase, bssid, ip,
+                            WirelessServer.TCP_PORT);
                     wireless.start(adapter, lastWifiInfo, phoneMac);
                     setPhase(Phase.WIRELESS_WAITING, ssid);
                 } catch (IOException e) {
@@ -464,7 +477,7 @@ public final class ConnectionManager implements Session.Listener {
     }
 
     public boolean wirelessCapable() {
-        return DeviceInfo.hasBluetooth() && me.ri3d.openauto.wireless.Hotspot.supported(app);
+        return DeviceInfo.hasBluetooth() && Hotspot.supported(app);
     }
 
     // ---- session ------------------------------------------------------------------------------
@@ -484,31 +497,31 @@ public final class ConnectionManager implements Session.Listener {
     public synchronized void prepareNativeTls() {
         if (nativeTlsTried) return;
         nativeTlsTried = true;
-        if (Build.VERSION.SDK_INT > me.ri3d.openauto.aa.NativeTls.MAX_SDK) {
-            me.ri3d.openauto.aa.NativeTls.init(Build.VERSION.SDK_INT, null); // only records why it is not used
+        if (Build.VERSION.SDK_INT > NativeTls.MAX_SDK) {
+            NativeTls.init(Build.VERSION.SDK_INT, null); // only records why it is not used
             return;
         }
-        android.content.SharedPreferences sp = prefs.raw();
+        SharedPreferences sp = prefs.raw();
         if (sp.getBoolean(Prefs.NATIVE_TLS_PROBING, false)) {
-            me.ri3d.openauto.aa.NativeTls.disable("its self-test did not finish last time");
+            NativeTls.disable("its self-test did not finish last time");
         } else {
             try {
                 sp.edit().putBoolean(Prefs.NATIVE_TLS_PROBING, true).commit();
-                me.ri3d.openauto.aa.NativeTls.init(Build.VERSION.SDK_INT, credentials());
+                NativeTls.init(Build.VERSION.SDK_INT, credentials());
                 sp.edit().putBoolean(Prefs.NATIVE_TLS_PROBING, false).commit();
             } catch (IOException e) {
-                me.ri3d.openauto.aa.NativeTls.disable(e.getMessage());
+                NativeTls.disable(e.getMessage());
             }
         }
-        addLog("tls: system OpenSSL " + (me.ri3d.openauto.aa.NativeTls.usable() ? "in use: " : "not used: ") + me.ri3d.openauto.aa.NativeTls.status());
+        addLog("tls: system OpenSSL " + (NativeTls.usable() ? "in use: " : "not used: ") + NativeTls.status());
     }
 
     /** Throughput of the system-OpenSSL engine in MB/s for Diagnostics, or -1 when it is not in use. */
     public double nativeTlsSpeed() {
         prepareNativeTls();
-        if (!me.ri3d.openauto.aa.NativeTls.usable()) return -1;
+        if (!NativeTls.usable()) return -1;
         try {
-            return me.ri3d.openauto.aa.NativeTls.selfTest(credentials(), 400);
+            return NativeTls.selfTest(credentials(), 400);
         } catch (IOException e) {
             return -1;
         }
@@ -563,7 +576,7 @@ public final class ConnectionManager implements Session.Listener {
             h = prefs.areaH();
         }
         if (w <= 0 || h <= 0) { // never measured: assume the whole display, landscape
-            android.util.DisplayMetrics m = app.getResources().getDisplayMetrics();
+            DisplayMetrics m = app.getResources().getDisplayMetrics();
             w = Math.max(m.widthPixels, m.heightPixels);
             h = Math.min(m.widthPixels, m.heightPixels);
         }
@@ -636,7 +649,7 @@ public final class ConnectionManager implements Session.Listener {
             // Keep the hotspot and servers up: the phone reconnects over Wi-Fi by itself.
             addLog("wireless: session ended (" + reason + "), waiting for the phone again");
             try {
-                wireless.start(android.bluetooth.BluetoothAdapter.getDefaultAdapter(), lastWifiInfo(), prefs.btPhone());
+                wireless.start(BluetoothAdapter.getDefaultAdapter(), lastWifiInfo(), prefs.btPhone());
                 setPhase(Phase.WIRELESS_WAITING, reason);
                 return;
             } catch (IOException | RuntimeException e) {
@@ -707,9 +720,9 @@ public final class ConnectionManager implements Session.Listener {
         }
     }
 
-    private me.ri3d.openauto.wireless.WirelessServer.WifiInfo lastWifiInfo;
+    private WirelessServer.WifiInfo lastWifiInfo;
 
-    private me.ri3d.openauto.wireless.WirelessServer.WifiInfo lastWifiInfo() {
+    private WirelessServer.WifiInfo lastWifiInfo() {
         return lastWifiInfo;
     }
 
@@ -765,12 +778,12 @@ public final class ConnectionManager implements Session.Listener {
         Runtime rt = Runtime.getRuntime();
         String media = this.media == null ? "" : ", " + this.media.video.stats();
         addLog("memory pressure level " + level + ": java heap " + (rt.totalMemory() - rt.freeMemory()) / 1024 + " KiB used of "
-                + rt.maxMemory() / 1024 + " KiB max, native " + android.os.Debug.getNativeHeapAllocatedSize() / 1024 + " KiB" + media);
+                + rt.maxMemory() / 1024 + " KiB max, native " + Debug.getNativeHeapAllocatedSize() / 1024 + " KiB" + media);
     }
 
     /** Developer aid: every thread's stack to logcat (tag Connection), for stalls that leave no exception. */
     public static void dumpThreads() {
-        for (java.util.Map.Entry<Thread, StackTraceElement[]> e : Thread.getAllStackTraces().entrySet()) {
+        for (Map.Entry<Thread, StackTraceElement[]> e : Thread.getAllStackTraces().entrySet()) {
             StringBuilder sb = new StringBuilder("thread \"").append(e.getKey().getName()).append("\" ").append(e.getKey().getState());
             for (StackTraceElement el : e.getValue()) sb.append("\n    at ").append(el);
             Log.i(TAG, sb.toString());

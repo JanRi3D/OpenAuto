@@ -16,15 +16,11 @@
     <!-- Header / tile status lines (only ever set from the real session state) -->
     <string name="status_no_phone">No phone connected</string>
     <string name="status_phone_usb">Phone on USB</string>
-    <string name="status_phone_wireless">Phone in range</string>
     <string name="status_connecting">Connecting…</string>
     <string name="status_connected">Connected</string>
-    <string name="status_projecting">Projecting</string>
     <string name="status_error">Connection failed</string>
     <string name="wireless_waiting">Waiting for phone</string>
-    <string name="wireless_found">Phone found, tap to start</string>
     <string name="wireless_no_bt">Bluetooth not available to apps</string>
-    <string name="wireless_manual_hint">Tap for manual Wi-Fi connection</string>
     <string name="wired_plug_in">Plug in a USB cable</string>
     <string name="wired_found">Phone detected, tap to start</string>
     <string name="wired_no_host">USB host not supported</string>
@@ -35,7 +31,6 @@
     <string name="self_unavailable_api">Unavailable: the Android Auto app needs Android 9 or newer. This device runs Android %1$s.</string>
     <string name="self_unavailable_app">Unavailable: the Android Auto app (com.google.android.projection.gearhead) is not installed on this device.</string>
     <string name="self_howto">Open Android Auto settings on this device, enable developer settings (tap the version 10 times) and turn on “Start head unit server”. Then tap Self Mode again.</string>
-    <string name="self_not_listening">Android Auto is installed but no head unit server is listening on port %1$d.</string>
     <string name="self_open_aa">Open Android Auto</string>
 
     <!-- Settings navigation -->
@@ -54,7 +49,6 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="connect">Connect</string>
-    <string name="not_available">Not available</string>
     <string name="unknown">Unknown</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
@@ -132,7 +126,6 @@
     <string name="set_bt_discoverable">Make discoverable</string>
     <string name="set_bt_discoverable_desc">Pair a new phone from the phone’s Bluetooth settings</string>
     <string name="set_bt_phone">Phone for wireless</string>
-    <string name="set_bt_phone_desc">Paired phone used for automatic connection</string>
     <string name="bt_phone_none">None selected</string>
     <string name="bt_pick_title">Choose a paired phone</string>
     <string name="bt_no_bonded">No paired devices</string>
@@ -179,7 +172,6 @@
     <string name="diag_probe">Decoder accepts</string>
     <string name="diag_probe_running">Probing…</string>
     <string name="diag_ip">IP addresses</string>
-    <string name="diag_hw_accel">Hardware UI acceleration</string>
 
     <!-- Connection phases and errors -->
     <string name="phase_switching">Switching the phone to accessory mode…</string>

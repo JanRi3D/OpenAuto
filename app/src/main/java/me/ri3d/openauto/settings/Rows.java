@@ -2,6 +2,7 @@ package me.ri3d.openauto.settings;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,7 +73,7 @@ public final class Rows {
         t.setText(s);
         t.setIncludeFontPadding(false);
         Resources r = c.getResources();
-        t.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, r.getDimensionPixelSize(sizeDimen));
+        t.setTextSize(TypedValue.COMPLEX_UNIT_PX, r.getDimensionPixelSize(sizeDimen));
         t.setTextColor(r.getColor(colorRes));
         return t;
     }

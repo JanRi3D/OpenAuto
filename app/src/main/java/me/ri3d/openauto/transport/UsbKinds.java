@@ -1,5 +1,8 @@
 package me.ri3d.openauto.transport;
 
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbInterface;
+
 /**
  * Decides from USB descriptors alone whether a device is worth treating as a phone. Head units have
  * internal USB devices (a real one exposed a "DAB USB Dongle", 16c0:05dc, vendor-specific class), and
@@ -28,18 +31,18 @@ public final class UsbKinds {
         return false;
     }
 
-    public static boolean looksLikePhone(android.hardware.usb.UsbDevice d) {
+    public static boolean looksLikePhone(UsbDevice d) {
         return looksLikePhone(d.getVendorId(), d.getProductId(), d.getDeviceClass(), interfaces(d));
     }
 
-    public static String describe(android.hardware.usb.UsbDevice d) {
+    public static String describe(UsbDevice d) {
         return describe(d.getVendorId(), d.getProductId(), d.getDeviceClass(), interfaces(d));
     }
 
-    private static int[][] interfaces(android.hardware.usb.UsbDevice d) {
+    private static int[][] interfaces(UsbDevice d) {
         int[][] out = new int[d.getInterfaceCount()][];
         for (int n = 0; n < out.length; n++) {
-            android.hardware.usb.UsbInterface i = d.getInterface(n);
+            UsbInterface i = d.getInterface(n);
             out[n] = new int[]{i.getInterfaceClass(), i.getInterfaceSubclass(), i.getInterfaceProtocol()};
         }
         return out;

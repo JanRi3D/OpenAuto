@@ -15,6 +15,8 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import me.ri3d.openauto.proto.ProtoReader;
@@ -67,7 +69,7 @@ public final class WirelessServer {
     private BluetoothServerSocket rfcomm;
     private ServerSocket tcp;
     private volatile boolean running;
-    private final java.util.List<Thread> threads = new java.util.ArrayList<>();
+    private final List<Thread> threads = new ArrayList<>();
 
     public WirelessServer(Listener listener) {
         this.listener = listener;

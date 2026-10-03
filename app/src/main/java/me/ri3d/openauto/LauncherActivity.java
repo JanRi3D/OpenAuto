@@ -13,6 +13,7 @@ import me.ri3d.openauto.diag.DeviceInfo;
 import me.ri3d.openauto.settings.Prefs;
 import me.ri3d.openauto.ui.Dialogs;
 import me.ri3d.openauto.ui.IconView;
+import me.ri3d.openauto.ui.Insets;
 import me.ri3d.openauto.ui.Ui;
 
 /** The Type B launcher: header, two large mode tiles, Self Mode and Settings stacked on the right. */
@@ -27,7 +28,7 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launcher);
-        me.ri3d.openauto.ui.Insets.fit(findViewById(R.id.root));
+        Insets.fit(findViewById(R.id.root));
         cm = ConnectionManager.get(this);
         prefs = new Prefs(this);
         wireless = findViewById(R.id.tile_wireless);

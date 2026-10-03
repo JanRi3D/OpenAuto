@@ -2,6 +2,7 @@ package me.ri3d.openauto.wireless;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.net.wifi.SoftApConfiguration;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -14,6 +15,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.Locale;
+
+import me.ri3d.openauto.diag.DeviceInfo;
 
 /**
  * Starts the head unit's Wi-Fi access point that the phone joins for projection.
@@ -44,7 +47,7 @@ public final class Hotspot {
 
     public static boolean supported(Context ctx) {
         if (Build.VERSION.SDK_INT >= 26) return true;
-        return me.ri3d.openauto.diag.DeviceInfo.wifiApApi(ctx);
+        return DeviceInfo.wifiApApi(ctx);
     }
 
     public void start(final String ssid, final String passphrase, final Callback cb) {
@@ -69,7 +72,7 @@ public final class Hotspot {
                     reservation = r;
                     String ssid, pass;
                     if (Build.VERSION.SDK_INT >= 30) {
-                        android.net.wifi.SoftApConfiguration c = r.getSoftApConfiguration();
+                        SoftApConfiguration c = r.getSoftApConfiguration();
                         ssid = c.getSsid();
                         pass = c.getPassphrase();
                     } else {

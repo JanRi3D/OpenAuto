@@ -6,6 +6,9 @@ import android.util.Log;
 import android.view.Surface;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import me.ri3d.openauto.aa.H264;
 import me.ri3d.openauto.aa.Media;
@@ -111,7 +114,7 @@ public final class VideoDecoder implements Media.VideoOut {
      * lists first, and a real head unit lists the software decoder before its hardware one.
      */
     private void startCodec() {
-        java.util.List<String> names = new java.util.ArrayList<>();
+        List<String> names = new ArrayList<>();
         for (String n : Decoders.avcDecoders()) { // hardware first
             if (preferSoftware && Decoders.isSoftware(n)) names.add(0, n); else names.add(n);
         }
@@ -284,7 +287,7 @@ public final class VideoDecoder implements Media.VideoOut {
     /** One line of counters for logs and Diagnostics. */
     public String stats() {
         long span = Math.max(1, lastFrameAtMs - firstFrameAtMs);
-        return String.format(java.util.Locale.US, "video: in %d units (%d KiB), queued %d, discarded %d, keyframe requests %d, rendered %d (%.1f fps avg), queue %d, %s",
+        return String.format(Locale.US, "video: in %d units (%d KiB), queued %d, discarded %d, keyframe requests %d, rendered %d (%.1f fps avg), queue %d, %s",
                 queue.unitsIn, queue.bytesIn / 1024, queue.unitsQueued, queue.unitsDiscarded, queue.keyframeRequests, framesRendered,
                 framesRendered > 1 ? (framesRendered - 1) * 1000.0 / span : 0.0, queue.size(), codecName);
     }

@@ -1,13 +1,15 @@
 package me.ri3d.openauto;
 
-import android.app.Activity;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.InputType;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,14 +21,21 @@ import android.widget.Toast;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
+import me.ri3d.openauto.aa.NativeTls;
+import me.ri3d.openauto.diag.CryptoBench;
 import me.ri3d.openauto.diag.Decoders;
 import me.ri3d.openauto.diag.DeviceInfo;
 import me.ri3d.openauto.settings.Prefs;
 import me.ri3d.openauto.settings.Rows;
+import me.ri3d.openauto.ui.BarlowText;
 import me.ri3d.openauto.ui.Dialogs;
+import me.ri3d.openauto.ui.Fonts;
 import me.ri3d.openauto.ui.IconView;
+import me.ri3d.openauto.ui.Insets;
+import me.ri3d.openauto.wireless.Hotspot;
 
 /** Left navigation + right content panel. Rows are built from the implemented settings only. */
 public class SettingsActivity extends Activity {
@@ -56,7 +65,7 @@ public class SettingsActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        me.ri3d.openauto.ui.Insets.fit(findViewById(R.id.root));
+        Insets.fit(findViewById(R.id.root));
         prefs = new Prefs(this);
         nav = (LinearLayout) findViewById(R.id.nav);
         rows = (LinearLayout) findViewById(R.id.rows);
@@ -85,9 +94,9 @@ public class SettingsActivity extends Activity {
             boolean on = i == cat;
             item.setBackgroundResource(on ? R.drawable.bg_nav_active : R.drawable.bg_nav);
             ((IconView) item.findViewById(R.id.icon)).setColor(getResources().getColor(on ? R.color.accent : R.color.muted));
-            me.ri3d.openauto.ui.BarlowText label = (me.ri3d.openauto.ui.BarlowText) item.findViewById(R.id.label);
+            BarlowText label = (BarlowText) item.findViewById(R.id.label);
             label.setTextColor(getResources().getColor(on ? R.color.fg : R.color.muted));
-            label.setFont(on ? me.ri3d.openauto.ui.Fonts.SEMIBOLD : me.ri3d.openauto.ui.Fonts.MEDIUM);
+            label.setFont(on ? Fonts.SEMIBOLD : Fonts.MEDIUM);
         }
         rows.removeAllViews();
         switch (cat) {
@@ -234,7 +243,7 @@ public class SettingsActivity extends Activity {
             state = getString(R.string.bt_on, name == null ? "" : name);
         }
         LinearLayout stateRow = Rows.row(this, s(R.string.set_bt_state), s(R.string.set_bt_state_desc));
-        stateRow.addView(Rows.text(this, state, me.ri3d.openauto.ui.Fonts.MEDIUM, R.dimen.row_desc, R.color.segment_text));
+        stateRow.addView(Rows.text(this, state, Fonts.MEDIUM, R.dimen.row_desc, R.color.segment_text));
         add(stateRow);
         if (bt == null) return;
         final BluetoothAdapter adapter = bt;
@@ -290,7 +299,7 @@ public class SettingsActivity extends Activity {
 
     private void buildWireless() {
         boolean bt = DeviceInfo.hasBluetooth();
-        boolean ap = me.ri3d.openauto.wireless.Hotspot.supported(this);
+        boolean ap = Hotspot.supported(this);
         String reason = !bt ? getString(R.string.wireless_auto_needs_bt) : !ap ? getString(R.string.wireless_auto_needs_ap) : null;
         add(Rows.toggle(this, s(R.string.set_wireless_auto), s(R.string.set_wireless_auto_desc), reason == null && prefs.wirelessAuto(),
                 reason, i -> prefs.put(Prefs.WIRELESS_AUTO, i == 1)));
@@ -300,7 +309,7 @@ public class SettingsActivity extends Activity {
         if (ap) {
             if (prefs.apSsid() == null) {
                 SecureRandom rnd = new SecureRandom(); // hotspot credentials, shown to the user; not a secret key
-                prefs.put(Prefs.AP_SSID, "OPENAUTO-" + Integer.toHexString(0x1000 + rnd.nextInt(0xEFFF)).toUpperCase(java.util.Locale.ROOT));
+                prefs.put(Prefs.AP_SSID, "OPENAUTO-" + Integer.toHexString(0x1000 + rnd.nextInt(0xEFFF)).toUpperCase(Locale.ROOT));
                 prefs.put(Prefs.AP_PASS, Long.toString(Math.abs(rnd.nextLong()), 36).substring(0, 10));
             }
             add(Rows.row(this, s(R.string.set_hotspot), prefs.apSsid() + "  ·  " + prefs.apPass()));
@@ -360,21 +369,21 @@ public class SettingsActivity extends Activity {
         for (String[] kv : DeviceInfo.collect(this)) add(Rows.info(this, kv[0], kv[1]));
         final LinearLayout probe = Rows.info(this, s(R.string.diag_probe), s(R.string.diag_probe_running));
         add(probe);
-        java.util.List<String> lines = ConnectionManager.get(this).logLines();
+        List<String> lines = ConnectionManager.get(this).logLines();
         StringBuilder logText = new StringBuilder();
         for (int i = Math.max(0, lines.size() - 40); i < lines.size(); i++) logText.append(lines.get(i)).append((char) 10);
         LinearLayout logRow = Rows.info(this, s(R.string.diag_log), logText.length() == 0 ? s(R.string.diag_log_empty) : logText.toString().trim());
-        ((TextView) logRow.getChildAt(1)).setGravity(android.view.Gravity.LEFT);
+        ((TextView) logRow.getChildAt(1)).setGravity(Gravity.LEFT);
         add(logRow);
         final LinearLayout crypto = Rows.info(this, s(R.string.diag_crypto), s(R.string.diag_probe_running));
         add(crypto);
         new Thread(() -> {
             double system = ConnectionManager.get(this).nativeTlsSpeed();
-            double[] mbps = me.ri3d.openauto.diag.CryptoBench.run();
-            final String text = (system < 0 ? "System OpenSSL not used (" + me.ri3d.openauto.aa.NativeTls.status() + ")"
-                    : String.format(java.util.Locale.US, "System %s: %.1f MB/s", me.ri3d.openauto.aa.NativeTls.status(), system))
-                    + String.format(java.util.Locale.US, "; Java engine: AES-GCM %.2f MB/s, ChaCha20-Poly1305 %.2f MB/s", mbps[0], mbps[1]);
-            android.util.Log.i("Connection", "crypto benchmark: " + text);
+            double[] mbps = CryptoBench.run();
+            final String text = (system < 0 ? "System OpenSSL not used (" + NativeTls.status() + ")"
+                    : String.format(Locale.US, "System %s: %.1f MB/s", NativeTls.status(), system))
+                    + String.format(Locale.US, "; Java engine: AES-GCM %.2f MB/s, ChaCha20-Poly1305 %.2f MB/s", mbps[0], mbps[1]);
+            Log.i("Connection", "crypto benchmark: " + text);
             ui.post(() -> {
                 if (gen != generation) return;
                 ((TextView) crypto.getChildAt(1)).setText(text);

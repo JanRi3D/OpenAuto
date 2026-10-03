@@ -1,5 +1,7 @@
 package me.ri3d.openauto.aa;
 
+import java.util.Arrays;
+
 /**
  * The little H.264 bitstream knowledge the receiver needs (ITU-T H.264 §7.3.2.1.1, Annex B):
  * recognising keyframes, and changing the cropping rectangle in a sequence parameter set.
@@ -181,7 +183,7 @@ public final class H264 {
             zeros = d[i] == 0 ? zeros + 1 : 0;
             out[n++] = d[i];
         }
-        return java.util.Arrays.copyOf(out, n);
+        return Arrays.copyOf(out, n);
     }
 
     /** Inserts emulation prevention bytes so the payload cannot contain a start code. */
@@ -196,7 +198,7 @@ public final class H264 {
             zeros = v == 0 ? zeros + 1 : 0;
             out[n++] = v;
         }
-        return java.util.Arrays.copyOf(out, n);
+        return Arrays.copyOf(out, n);
     }
 
     private static final class Bits {
@@ -255,7 +257,7 @@ public final class H264 {
 
         /** The bits written so far, zero-padded to a whole byte. */
         byte[] bytes() {
-            return java.util.Arrays.copyOf(d, (pos + 7) / 8);
+            return Arrays.copyOf(d, (pos + 7) / 8);
         }
     }
 }
