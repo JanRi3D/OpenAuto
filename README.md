@@ -1,69 +1,74 @@
-# OpenAuto
+<p align="center">
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="88" alt="OpenAuto icon">
+</p>
 
-A lightweight Android Auto receiver for old Android car radios.
+<h1 align="center">OpenAuto</h1>
 
-![Launcher](docs/images/launcher.png)
+<p align="center">
+  Android Auto on the Android car radio you already have, even an old and slow one.
+</p>
 
-OpenAuto turns an Android head unit into an Android Auto receiver: connect a phone and its Android
-Auto interface appears on the radio's screen, with touch, music, navigation prompts and the
-microphone. It is written from scratch in Java against the plain platform APIs, so it runs on
-Android 4.1 (API 16) and on slow hardware. The APK is about 1 MB.
+<p align="center">
+  <img src="https://img.shields.io/badge/Android-4.1%2B-3ddc84" alt="Android 4.1+">
+  <img src="https://img.shields.io/badge/minSdk-16-blue" alt="minSdk 16">
+  <img src="https://img.shields.io/badge/APK-~1%20MB-f5b83d" alt="APK about 1 MB">
+  <img src="https://img.shields.io/badge/language-Java-orange" alt="Java">
+</p>
+
+<p align="center">
+  <img src="docs/images/launcher.png" width="760" alt="OpenAuto launcher">
+</p>
+
+OpenAuto is an Android Auto receiver. Install it on an Android head unit, connect a phone, and the
+phone's Android Auto interface appears on the radio's screen with touch, music, navigation prompts
+and the microphone.
+
+It is written from scratch in Java against the plain platform APIs: no AndroidX, no Kotlin, no
+frameworks. That keeps the APK at about 1 MB and lets it run on Android 4.1 with a few hundred
+megabytes of RAM, the kind of radio that never got Android Auto from its manufacturer.
 
 > Not affiliated with or endorsed by Google. Android Auto is a trademark of Google LLC. Google does
 > not document the head-unit protocol; this implementation follows what open-source projects have
 > worked out, see [docs/protocol-reference.md](docs/protocol-reference.md).
 
+## Contents
+
+[Features](#features) · [Quick start](#quick-start) · [Connecting a phone](#connecting-a-phone) ·
+[Settings](#settings) · [How it works](#how-it-works) · [Status](#status) ·
+[Troubleshooting](#troubleshooting) · [Building](#building) · [Development](#development)
+
 ## Features
-
-- **Wired** over USB (Android Open Accessory), **wireless** over Wi-Fi by IP address, automatic
-  wireless over Bluetooth and a hotspot (experimental), and **Self Mode** for a device that runs
-  Android Auto itself (Android 9+).
-- H.264 video through `MediaCodec` straight to a Surface, hardware decoder first.
-- Touch, media audio, navigation and assistant audio, microphone.
-- Fits any landscape screen shape without stretching: the phone is asked to lay out for the
-  screen's aspect ratio (video margins) and the margins are cropped.
-- Fast encryption on Android 4.1–5.1 through the device's own OpenSSL, with a pure-Java fallback.
-- Reconnects after a dropped connection; clean stop from either side.
-- Diagnostics screen: device facts, decoders, USB devices, encryption speed, connection log.
-- No AndroidX, no Kotlin, no bundled native libraries. One dependency (BouncyCastle TLS).
-
-## Status
 
 | | |
 |---|---|
-| Wi-Fi by IP address | Works with a real phone (Samsung SM-S948B, protocol 1.7) on emulators and on a real radio |
-| Wired USB | Connects and projects on a real radio (ADAYO AC822X, Android 4.2.2, 1920x720) |
-| Video, touch, media audio | Work; 30 fps on the emulators |
-| Automatic wireless | Implemented, not yet verified with a phone |
-| Microphone | Channel works; capture not yet exercised with the assistant |
-| Phone calls, steering-wheel keys, start on boot | Not implemented |
+| **Three ways to connect** | USB cable, Wi-Fi by IP address, or automatic wireless over Bluetooth and a hotspot (experimental) |
+| **Self Mode** | Runs against Android Auto on the same device (Android 9+) |
+| **Video** | H.264 through the hardware decoder straight to the screen, 480p to 1080p, 30 or 60 fps |
+| **Any screen shape** | The phone lays out for the radio's aspect ratio, so wide 8:3 screens are filled without stretching |
+| **Audio** | Music, navigation prompts and the assistant, with ducking; microphone for voice commands |
+| **Touch** | Mapped to the phone's coordinates; media keys are passed on |
+| **Fast on old hardware** | Encryption runs through the system's own OpenSSL on Android 4.1–5.1 |
+| **Robust** | Reconnects after a dropped connection; clean stop from either side |
+| **Diagnostics** | Device facts, decoders, USB devices, encryption speed and a connection log on one screen |
 
-The latest fixes (video artifacts, sound without picture on USB, USB permission wait) are verified
-on emulators and still need a run on the radio. Details per feature: [docs/STATUS.md](docs/STATUS.md);
-measurements and test logs: [docs/TEST-RESULTS.md](docs/TEST-RESULTS.md).
+<p align="center">
+  <img src="docs/images/settings.png" width="49%" alt="Video settings">
+  <img src="docs/images/diagnostics.png" width="49%" alt="Diagnostics">
+</p>
 
-![Settings](docs/images/settings.png)
+## Quick start
 
-## Install
+1. Install the APK from [dist/](dist/) on the head unit:
 
-A debug build is in [dist/](dist/):
+   ```bash
+   adb install -r dist/openauto-0.1.0-debug.apk
+   ```
 
-```bash
-adb install -r dist/openauto-0.1.0-debug.apk
-```
+2. Plug the phone into the radio's USB port and tap **Wired**. Confirm the two USB dialogs; tick
+   "use by default" on the second one.
+3. Android Auto starts on the phone and shows up on the radio.
 
-## Build
-
-Android Gradle Plugin 9.3.3, Gradle 9.5.0 (wrapper), JDK 21 (the Android Studio JBR works), compileSdk
-36, minSdk 16, NDK 23.2.8568313 and CMake 3.22.1 from the SDK manager (they build a small JNI shim,
-see [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)).
-
-```bash
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-```
-
-Output: `app/build/outputs/apk/debug/app-debug.apk`. `assembleRelease` produces an unsigned APK until
-a signing config is added.
+No USB port that Android can see? Use [Wi-Fi](#wireless-by-ip-address) instead.
 
 ## Connecting a phone
 
@@ -103,8 +108,15 @@ launcher; Android Auto's own Exit entry returns to the launcher and keeps the co
 
 ## Settings
 
-General (keep screen on, auto-start, diagnostics, reset), Video, Audio (media, navigation and
-assistant, microphone), Input (media keys, Back key), Bluetooth, Wireless.
+| Category | What it holds |
+|---|---|
+| General | Keep screen on, start when a phone is plugged in, reset |
+| Video | Resolution, frame rate, DPI, screen fit, video output, decoder, day and night colours |
+| Audio | Media, navigation and assistant audio, microphone |
+| Input | Media keys, Back key behaviour |
+| Bluetooth | Adapter state, discoverable, phone for wireless |
+| Wireless | Automatic connection, hotspot, manual connection, reconnect |
+| Diagnostics | Everything needed to tell why something does not work |
 
 Head units differ, so three Video settings are there to adapt:
 
@@ -114,22 +126,80 @@ Head units differ, so three Video settings are there to adapt:
 | Video output: Auto / Direct / Direct 2 / Compatible | Auto | the picture is squeezed or shifted: try the next one. Direct and Direct 2 use the display hardware (fast) and differ in how the margins are cropped; Compatible draws the frame itself (always right, slower on weak GPUs) |
 | Decoder: Hardware / Software | Hardware | the picture is corrupt or missing |
 
+## How it works
+
+```mermaid
+flowchart LR
+    phone["Phone<br>Android Auto"]
+    subgraph unit["Head unit: OpenAuto"]
+        direction LR
+        transport["USB accessory<br>or TCP"] --- session["Framing, TLS,<br>session"]
+        session --> video["Video"] --> codec["MediaCodec<br>to the screen"]
+        session --> audio["Audio"] --> track["AudioTrack"]
+        mic["Microphone"] --> session
+        touch["Touch, keys"] --> session
+    end
+    phone <--> transport
+```
+
+The phone is the server and does the heavy lifting: it renders its interface, encodes it as H.264
+and sends it together with PCM audio. The head unit authenticates with TLS, announces its screen,
+audio and input capabilities, decodes what arrives and sends touch and microphone data back. Each
+kind of data has its own channel inside one multiplexed, encrypted connection.
+
+The protocol core in [`aa/`](app/src/main/java/me/ri3d/openauto/aa) is plain Java without Android
+dependencies. More in the [design notes](docs/DESIGN.md) and the
+[protocol reference](docs/protocol-reference.md).
+
+## Status
+
+| | |
+|---|---|
+| Wi-Fi by IP address | Works |
+| Wired USB | Connects and projects on a real radio (ADAYO AC822X, Android 4.2.2, 1920x720) |
+| Video, touch, media audio | Work; 30 fps on the emulators |
+| Automatic wireless | Implemented, not yet verified with a phone |
+| Microphone | Channel works; capture not yet exercised with the assistant |
+| Phone calls, steering-wheel keys, start on boot | Not implemented |
+
+The latest fixes (video artifacts, sound without picture on USB, USB permission wait) are verified
+on emulators and still need a run on the radio. Details per feature: [docs/STATUS.md](docs/STATUS.md);
+measurements and test logs: [docs/TEST-RESULTS.md](docs/TEST-RESULTS.md).
+
 ## Troubleshooting
 
-- **"The phone accepted the connection but did not answer"**: stop and start the head unit server
-  in Android Auto's developer settings and keep the phone awake.
-- **Squeezed or shifted picture, or low frame rate**: Settings › Video › Video output.
-- **Collecting logs from a radio**: `tools/collect-radio-logs.ps1` gathers logcat, compositor and
-  CPU information over ADB while you reproduce the problem:
+| Problem | What to do |
+|---|---|
+| "The phone accepted the connection but did not answer" | Stop and start the head unit server in Android Auto's developer settings and keep the phone awake |
+| Squeezed or shifted picture, or low frame rate | Settings › Video › Video output: try the next option |
+| Corrupt or missing picture | Settings › Video › Decoder: Software |
+| The phone is not found on USB | Settings › Diagnostics lists each USB device with a "phone / not a phone" verdict; switch the phone to file transfer |
+| Wired says "USB host not supported" | The radio's USB port is not wired to Android; use Wi-Fi |
 
-  ```bash
-  powershell -ExecutionPolicy Bypass -File tools\collect-radio-logs.ps1 <radio-ip>
-  ```
+To report a problem, collect logs while reproducing it:
+
+```bash
+powershell -ExecutionPolicy Bypass -File tools\collect-radio-logs.ps1 <radio-ip>
+```
+
+The script gathers logcat, compositor state and CPU usage over ADB into `radio-logs/`.
+
+## Building
+
+Android Gradle Plugin 9.3.3, Gradle 9.5.0 (wrapper), JDK 21 (the Android Studio JBR works), compileSdk
+36, minSdk 16, NDK 23.2.8568313 and CMake 3.22.1 from the SDK manager (they build a small JNI shim,
+see [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)).
+
+```bash
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+```
+
+Output: `app/build/outputs/apk/debug/app-debug.apk`. `assembleRelease` produces an unsigned APK until
+a signing config is added.
 
 ## Development
 
-The protocol core (`app/src/main/java/me/ri3d/openauto/aa`) has no Android dependencies and is
-tested on the JVM against a scripted phone:
+The protocol core is tested on the JVM against a scripted phone, which can also serve an emulator:
 
 ```bash
 # a scripted phone on port 5277 that streams an H.264 Annex B file
@@ -150,9 +220,9 @@ production session against a real phone from the build machine and traces every 
 | `ui/`, `settings/`, `diag/` | views, settings rows, diagnostics |
 | `src/main/cpp/` | JNI shim over the system's OpenSSL |
 
-Documentation: [design notes](docs/DESIGN.md), [dependencies](docs/DEPENDENCIES.md),
-[protocol reference](docs/protocol-reference.md), [feature status](docs/STATUS.md),
-[test results](docs/TEST-RESULTS.md).
+Documentation: [design notes](docs/DESIGN.md) · [dependencies](docs/DEPENDENCIES.md) ·
+[protocol reference](docs/protocol-reference.md) · [feature status](docs/STATUS.md) ·
+[test results](docs/TEST-RESULTS.md)
 
 ## Known limitations
 
