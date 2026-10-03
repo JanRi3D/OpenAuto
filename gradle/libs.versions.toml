@@ -1,0 +1,13 @@
+[versions]
+agp = "9.3.3"
+junit = "4.13.2"
+# BouncyCastle TLS: pure-Java TLS 1.2 client used for the in-frame TLS session (see docs/DEPENDENCIES.md).
+bouncycastle = "1.86"
+
+[libraries]
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+bcprov = { group = "org.bouncycastle", name = "bcprov-jdk15to18", version.ref = "bouncycastle" }
+bctls = { group = "org.bouncycastle", name = "bctls-jdk15to18", version.ref = "bouncycastle" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
