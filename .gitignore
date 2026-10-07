@@ -16,3 +16,9 @@ local.properties
 
 # logs pulled from real devices (may contain personal data)
 radio-logs/
+
+# release signing: the keystore and its passwords stay on the build machine
+keystore.properties
+*.jks
+*.keystore
+app/release/
