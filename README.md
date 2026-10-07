@@ -61,7 +61,7 @@ megabytes of RAM, the kind of radio that never got Android Auto from its manufac
 1. Install the APK from [dist/](dist/) on the head unit:
 
    ```bash
-   adb install -r dist/openauto-0.1.0-debug.apk
+   adb install -r dist/openauto-0.1.0-release.apk
    ```
 
 2. Plug the phone into the radio's USB port and tap **Wired**. Confirm the two USB dialogs; tick
