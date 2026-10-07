@@ -194,8 +194,13 @@ see [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)).
 ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 ```
 
-Output: `app/build/outputs/apk/debug/app-debug.apk`. `assembleRelease` produces an unsigned APK until
-a signing config is added.
+Output: `app/build/outputs/apk/debug/app-debug.apk`. `assembleRelease` signs the APK when a
+`keystore.properties` file (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) sits next to
+`settings.gradle.kts`; without it the release build stays unsigned.
+
+Pushing a `v*` tag runs [the release workflow](.github/workflows/release.yml), which builds the signed
+APK from the `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD` repository secrets
+and attaches it to the GitHub release.
 
 ## Development
 
