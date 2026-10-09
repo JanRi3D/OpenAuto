@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -19,6 +20,7 @@ import me.ri3d.openauto.ui.Ui;
 /** The Type B launcher: header, two large mode tiles, Self Mode and Settings stacked on the right. */
 public class LauncherActivity extends Activity implements ConnectionManager.Listener {
     private View wireless, wired, self, settings;
+    private View minimize;
     private View statusDot;
     private TextView statusText;
     private ConnectionManager cm;
@@ -28,6 +30,7 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launcher);
+        Insets.systemBars(getWindow());
         Insets.fit(findViewById(R.id.root));
         cm = ConnectionManager.get(this);
         prefs = new Prefs(this);
@@ -37,6 +40,7 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         settings = findViewById(R.id.tile_settings);
         statusDot = findViewById(R.id.status_dot);
         statusText = (TextView) findViewById(R.id.status_text);
+        minimize = findViewById(R.id.minimize);
 
         setMain(wireless, IconView.WIFI, R.string.wireless);
         setMain(wired, IconView.USB, R.string.wired);
@@ -47,6 +51,7 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         self.setOnClickListener(v -> onSelfMode());
         wireless.setOnClickListener(v -> onWireless());
         wired.setOnClickListener(v -> onWired(null));
+        minimize.setOnClickListener(v -> onMinimize());
         handleUsbIntent(getIntent());
     }
 
@@ -85,11 +90,15 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         cm.setUiFocused(hasFocus); // a system dialog (USB permission) in front of us takes the focus
+        if (hasFocus) Insets.systemBars(getWindow());
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        String action = prefs.minimize();
+        minimize.setVisibility("off".equals(action) ? View.GONE : View.VISIBLE);
+        ((IconView) minimize.findViewById(R.id.minimize_icon)).setIcon("close".equals(action) ? IconView.CLOSE : IconView.MINIMIZE);
         cm.addListener(this);
         render();
     }
@@ -158,6 +167,16 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         cm.clearError();
         cm.connectTcp(ip, prefs.manualPort());
         ProjectionActivity.open(this);
+    }
+
+    /** Header button, Settings › General › Minimize button: leave the session running, or end it and close (or hidden). */
+    private void onMinimize() {
+        if ("close".equals(prefs.minimize())) {
+            cm.stop();
+            if (Build.VERSION.SDK_INT >= 21) finishAndRemoveTask(); else finish();
+        } else {
+            moveTaskToBack(true);
+        }
     }
 
     private void onSelfMode() {

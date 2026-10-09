@@ -110,7 +110,7 @@ launcher; Android Auto's own Exit entry returns to the launcher and keeps the co
 
 | Category | What it holds |
 |---|---|
-| General | Keep screen on, start when a phone is plugged in, reset |
+| General | Keep screen on, start when a phone is plugged in, system bars (keep the notch clear, hide only the status bar, full screen, normal), minimize button (minimize, close the app, or hidden), reset |
 | Video | Resolution, frame rate, DPI, screen fit, video output, decoder, day and night colours |
 | Audio | Media, navigation and assistant audio, microphone |
 | Input | Media keys, Back key behaviour |

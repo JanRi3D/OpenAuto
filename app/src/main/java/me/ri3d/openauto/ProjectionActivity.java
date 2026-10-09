@@ -54,8 +54,8 @@ public class ProjectionActivity extends Activity implements ConnectionManager.Li
         cm = ConnectionManager.get(this);
         if (cm.prefs().keepScreenOn()) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_projection);
-        Insets.immersive(getWindow());
-        Insets.fit(findViewById(R.id.root)); // keeps video and controls clear of a camera cutout
+        Insets.systemBars(getWindow());
+        Insets.fit(findViewById(R.id.root)); // keeps video and controls clear of visible bars and, by default, a camera cutout
         stage = (FrameLayout) findViewById(R.id.stage);
         status = (TextView) findViewById(R.id.status);
         stage.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
@@ -74,7 +74,7 @@ public class ProjectionActivity extends Activity implements ConnectionManager.Li
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         cm.setUiFocused(hasFocus);
-        if (hasFocus) Insets.immersive(getWindow());
+        if (hasFocus) Insets.systemBars(getWindow());
     }
 
     @Override

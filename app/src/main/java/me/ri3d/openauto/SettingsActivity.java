@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.InputType;
@@ -65,6 +66,7 @@ public class SettingsActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        Insets.systemBars(getWindow());
         Insets.fit(findViewById(R.id.root));
         prefs = new Prefs(this);
         nav = (LinearLayout) findViewById(R.id.nav);
@@ -83,6 +85,12 @@ public class SettingsActivity extends Activity {
             nav.addView(item, lp);
         }
         show(getIntent().getIntExtra(EXTRA_CATEGORY, VIDEO));
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) Insets.systemBars(getWindow());
     }
 
     private void show(int cat) {
@@ -122,18 +130,42 @@ public class SettingsActivity extends Activity {
 
     // ---- General ------------------------------------------------------------------------------
 
+    private static final String[] BARS = {"notch", "status", "full", "normal"};
+    private static final int[] BAR_LABELS = {R.string.bars_notch, R.string.bars_status, R.string.bars_full, R.string.bars_normal};
+
     private void buildGeneral() {
         add(Rows.toggle(this, s(R.string.set_keep_screen_on), s(R.string.set_keep_screen_on_desc), prefs.keepScreenOn(), null,
                 i -> prefs.put(Prefs.KEEP_ON, i == 1)));
         add(Rows.toggle(this, s(R.string.set_auto_start), s(R.string.set_auto_start_desc), prefs.autoStart(), null,
                 i -> prefs.put(Prefs.AUTO_START, i == 1)));
+        int bars = Math.max(0, indexOf(BARS, prefs.systemBars()));
+        LinearLayout barsRow = Rows.action(this, s(R.string.set_bars), s(BAR_LABELS[bars]), v -> pickBars(bars));
+        Rows.note(barsRow, s(Build.VERSION.SDK_INT >= 19 ? R.string.bars_note : R.string.bars_old_android), R.color.muted);
+        add(barsRow);
+        String[] minimize = {"minimize", "close", "off"};
+        add(Rows.choice(this, s(R.string.set_minimize), s(R.string.set_minimize_desc),
+                new CharSequence[]{s(R.string.minimize), s(R.string.minimize_close), s(R.string.minimize_off)},
+                Math.max(0, indexOf(minimize, prefs.minimize())), null, i -> prefs.put(Prefs.MINIMIZE, minimize[i])));
         add(Rows.action(this, s(R.string.set_diagnostics), s(R.string.set_diagnostics_desc), v -> show(DIAGNOSTICS)));
         add(Rows.action(this, s(R.string.set_reset), s(R.string.set_reset_desc), v -> {
             prefs.reset();
+            Insets.systemBars(getWindow());
             Toast.makeText(this, R.string.reset_done, Toast.LENGTH_SHORT).show();
             current = -1;
             show(GENERAL);
         }));
+    }
+
+    private void pickBars(int selected) {
+        CharSequence[] labels = new CharSequence[BARS.length];
+        for (int i = 0; i < labels.length; i++) labels[i] = s(BAR_LABELS[i]);
+        Dialogs.builder(this).setTitle(R.string.set_bars).setSingleChoiceItems(labels, selected, (d, w) -> {
+            d.dismiss();
+            prefs.put(Prefs.SYSTEM_BARS, BARS[w]);
+            Insets.systemBars(getWindow());
+            current = -1;
+            show(GENERAL);
+        }).show();
     }
 
     // ---- Video --------------------------------------------------------------------------------

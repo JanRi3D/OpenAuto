@@ -24,12 +24,35 @@
             app:font="condensed"
             app:wordmark="true" />
 
+        <!-- Minimize, close or hidden: Settings › General › Minimize button; the icon is set in code. -->
+        <FrameLayout
+            android:id="@+id/minimize"
+            android:layout_width="@dimen/back_h"
+            android:layout_height="@dimen/back_h"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="20dp"
+            android:background="@drawable/bg_back"
+            android:clickable="true"
+            android:contentDescription="@string/minimize"
+            android:focusable="true">
+
+            <me.ri3d.openauto.ui.IconView
+                android:id="@+id/minimize_icon"
+                android:layout_width="@dimen/back_icon"
+                android:layout_height="@dimen/back_icon"
+                android:layout_gravity="center"
+                app:iconColor="@color/fg"
+                app:iconStroke="2.25" />
+        </FrameLayout>
+
         <me.ri3d.openauto.ui.ClockView
             android:id="@+id/clock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:layout_alignWithParentIfMissing="true"
             android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/minimize"
             android:includeFontPadding="false"
             android:textColor="@color/fg"
             android:textSize="@dimen/clock" />

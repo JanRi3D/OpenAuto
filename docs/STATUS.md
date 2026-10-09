@@ -29,6 +29,8 @@ framing code with a JSSE TLS server. It proves this side of the protocol, not Go
 | Aspect-correct video on any landscape screen (video margins; cropped by a TextureView transform, by the codec's scaling mode, or through the stream's SPS; chosen by "Video output") | TextureView: done on emulators and on the radio (right shape, but 16.6 fps there). SurfaceView + scaling mode: done on the Android 16 emulator, expected on the radio, not yet run there | No single method is honoured everywhere (TEST-RESULTS §3a, §3b, §4b, §4c) |
 | Android Auto's Exit entry (native video focus request) | done vs real phone | Returns to the launcher, session kept, tile returns to projection |
 | Edge-to-edge insets and immersive projection on modern Android | done | Android 16 emulator screenshots |
+| System bars setting (keep the notch clear, status bar only, full screen, normal) on every screen | done on Android 16 and 4.1 emulators; the Android 4.4–10 path is unverified | Android 4.1–4.3 can only hide the status bar |
+| Minimize button on the start screen (minimize, end the session and close, or hidden) | done | Android 16 and 4.1 emulators |
 | Reconnect after unexpected drop (USB/TCP: 3 attempts, 2/4/6 s; wireless: keep hotspot, wait again) | done vs fake phone (TCP) | Emulator: drop -> RECONNECTING -> PROJECTING within ~4 s, screen stays up |
 | Memory pressure logging (onTrimMemory) | built | |
 | Automatic wireless (BT RFCOMM server + credential exchange + hotspot + TCP 5288) | built, unverified | JVM test of the RFCOMM exchange; emulator has no Bluetooth; HSP trigger impossible from an app (see DESIGN §5) |

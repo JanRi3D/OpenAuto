@@ -17,7 +17,8 @@ import me.ri3d.openauto.R;
  */
 public class IconView extends View {
     public static final int WIFI = 0, USB = 1, SELF = 2, SLIDERS = 3, ARROW_RIGHT = 4, ARROW_LEFT = 5,
-            MONITOR = 6, SPEAKER = 7, TARGET = 8, BLUETOOTH = 9, PLUS = 10, MINUS = 11, ACTIVITY = 12, CLOSE = 13;
+            MONITOR = 6, SPEAKER = 7, TARGET = 8, BLUETOOTH = 9, PLUS = 10, MINUS = 11, ACTIVITY = 12, CLOSE = 13,
+            MINIMIZE = 14;
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
@@ -164,6 +165,9 @@ public class IconView extends View {
             case CLOSE:
                 c.drawLine(6, 6, 18, 18, paint);
                 c.drawLine(18, 6, 6, 18, paint);
+                break;
+            case MINIMIZE:
+                c.drawLine(6, 18, 18, 18, paint);
                 break;
             default:
                 break;

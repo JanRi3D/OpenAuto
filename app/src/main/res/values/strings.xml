@@ -63,6 +63,18 @@
     <string name="set_reset">Reset settings</string>
     <string name="set_reset_desc">Back to the defaults for this device</string>
     <string name="reset_done">Settings reset</string>
+    <string name="set_bars">System bars</string>
+    <string name="bars_notch">Keep the notch clear</string>
+    <string name="bars_status">Hide only the status bar</string>
+    <string name="bars_full">Full screen (all bars hidden)</string>
+    <string name="bars_normal">Normal</string>
+    <string name="bars_note">Keep the notch clear hides both bars too, but draws nothing in a camera cutout. Swipe from the edge to show hidden bars.</string>
+    <string name="bars_old_android">Android 4.1 to 4.3 can only hide the status bar; the navigation bar stays visible.</string>
+    <string name="set_minimize">Minimize button</string>
+    <string name="set_minimize_desc">The button at the top right of the start screen. Close app also ends the phone connection</string>
+    <string name="minimize">Minimize</string>
+    <string name="minimize_close">Close app</string>
+    <string name="minimize_off">Hidden</string>
 
     <!-- Video -->
     <string name="set_resolution">Resolution</string>
