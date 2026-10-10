@@ -32,6 +32,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import me.ri3d.openauto.aa.NativeTls;
+import me.ri3d.openauto.aa.NavChannel;
 import me.ri3d.openauto.aa.Session;
 import me.ri3d.openauto.aa.TlsCredentials;
 import me.ri3d.openauto.aa.VideoGeometry;
@@ -55,6 +56,8 @@ import me.ri3d.openauto.wireless.WirelessServer;
 public final class ConnectionManager implements Session.Listener {
     private static final String TAG = "Connection";
     private static final String ACTION_USB_PERMISSION = "me.ri3d.openauto.USB_PERMISSION";
+    /** Next turn for dashboards (OpenDashboard); sticky, so a dashboard started later still gets it. */
+    private static final String ACTION_NAV = "me.ri3d.openauto.NAV";
     private static final int SWITCH_TIMEOUT_MS = 10000;
 
     public enum Phase { IDLE, USB_PERMISSION, USB_SWITCHING, HOTSPOT, WIRELESS_WAITING, CONNECTING, VERSION, HANDSHAKE, DISCOVERY, READY, PROJECTING, RECONNECTING, ERROR }
@@ -562,6 +565,7 @@ public final class ConnectionManager implements Session.Listener {
         cfg.manufacturer = Build.MANUFACTURER;
         try { cfg.swVersion = app.getPackageManager().getPackageInfo(app.getPackageName(), 0).versionName; } catch (Exception ignored) { }
         session = new Session(t, creds, cfg, media, this);
+        publishNav(navOff()); // clears a route left behind by a session that died with the process
         ProjectionService.start(app);
         setPhase(Phase.CONNECTING, t.describe());
         session.start();
@@ -634,6 +638,7 @@ public final class ConnectionManager implements Session.Listener {
 
     private void onClosed(Session s, String reason) {
         session = null;
+        publishNav(navOff());
         if (media != null) {
             media.release();
             media = null;
@@ -684,6 +689,36 @@ public final class ConnectionManager implements Session.Listener {
     @Override
     public void onLog(Session s, String line) {
         addLog(line);
+    }
+
+    @Override
+    public void onNavigation(final Session s) {
+        NavChannel n = s.nav; // read on the reader thread, where the channel writes
+        boolean on = n.status == Wire.NAV_ACTIVE || n.status == Wire.NAV_REROUTING;
+        final Intent i = !on ? navOff() : new Intent(ACTION_NAV)
+                .putExtra("status", n.status == Wire.NAV_REROUTING ? "rerouting" : "active")
+                .putExtra("road", n.road)
+                .putExtra("maneuver", n.maneuver)
+                .putExtra("direction", n.direction)
+                .putExtra("exit", n.exit)
+                .putExtra("image", n.image)
+                .putExtra("meters", n.meters)
+                .putExtra("seconds", n.seconds)
+                .putExtra("distance", n.displayMillis)
+                .putExtra("unit", n.unit);
+        main.post(() -> { if (s == session) publishNav(i); });
+    }
+
+    private static Intent navOff() {
+        return new Intent(ACTION_NAV).putExtra("status", "inactive");
+    }
+
+    @SuppressWarnings("deprecation") // sticky broadcasts: the only way to hand state to a dashboard on Android 4.x
+    private void publishNav(Intent i) {
+        try {
+            app.sendStickyBroadcast(i);
+        } catch (RuntimeException ignored) { // BROADCAST_STICKY missing on a modified build: dashboards show no turns
+        }
     }
 
     private Runnable leaveProjection;

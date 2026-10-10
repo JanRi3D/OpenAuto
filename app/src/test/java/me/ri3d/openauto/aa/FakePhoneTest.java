@@ -75,8 +75,8 @@ public class FakePhoneTest {
 
         StubMedia media = new StubMedia();
         final List<Session.State> states = Collections.synchronizedList(new ArrayList<>());
-        final CountDownLatch projecting = new CountDownLatch(1), closed = new CountDownLatch(1);
-        final String[] closeReason = new String[1];
+        final CountDownLatch projecting = new CountDownLatch(1), closed = new CountDownLatch(1), routed = new CountDownLatch(1);
+        final String[] closeReason = new String[1], turn = new String[1];
         Session.Config cfg = new Session.Config();
         cfg.pingIntervalMs = 200;
         Session.Listener l = new Session.Listener() {
@@ -86,6 +86,13 @@ public class FakePhoneTest {
                 if (state == Session.State.CLOSED) { closeReason[0] = detail; closed.countDown(); }
             }
             public void onLog(Session s, String line) { }
+            public void onNavigation(Session s) {
+                NavChannel n = s.nav;
+                if (n.meters < 0) return; // distance follows the turn
+                turn[0] = n.status + " " + n.road + " dir " + n.direction + " type " + n.maneuver + " png " + n.image.length
+                        + " " + n.meters + " m " + n.seconds + " s " + n.displayMillis + " unit " + n.unit;
+                routed.countDown();
+            }
         };
         Session session = new Session(TcpTransport.connect("127.0.0.1", server.getLocalPort(), 2000), creds, cfg, media, l);
         session.start();
@@ -97,6 +104,8 @@ public class FakePhoneTest {
         assertTrue("input binding not answered", phone.bound.await(5, TimeUnit.SECONDS));
         assertTrue("sensor events missing", phone.sensors.await(5, TimeUnit.SECONDS));
         assertTrue("no ping sent", phone.pinged.await(5, TimeUnit.SECONDS));
+        assertTrue("navigation events missing", routed.await(5, TimeUnit.SECONDS));
+        assertEquals(Wire.NAV_ACTIVE + " Hauptstraße dir 1 type 4 png 4 352 m 25 s 350000 unit 1", turn[0]);
 
         session.input.touch(Wire.TOUCH_PRESS, 100, 200);
         session.input.touch(Wire.TOUCH_RELEASE, 100, 200);

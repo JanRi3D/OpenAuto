@@ -196,6 +196,12 @@ final class FakePhone implements Runnable {
                 send(ch, false, Wire.SENSOR_START_REQUEST, proto(new ProtoWriter().uint(1, Wire.SENSOR_NIGHT_DATA).uint(2, 0)), true);
             } else if (ch == Wire.CH_INPUT) {
                 send(ch, false, Wire.BINDING_REQUEST, proto(new ProtoWriter().int32(1, Wire.BTN_TOGGLE_PLAY)), true);
+            } else if (ch == Wire.CH_NAVIGATION) { // route started, turn left into Hauptstraße in 350 m
+                send(ch, false, Wire.NAV_STATUS, proto(new ProtoWriter().uint(1, Wire.NAV_ACTIVE)), true);
+                byte[] png = {(byte) 0x89, 'P', 'N', 'G'};
+                send(ch, false, Wire.NAV_TURN, proto(new ProtoWriter().string(1, "Hauptstraße").uint(2, 1).uint(3, 4)
+                        .bytes(4, png, 0, png.length).uint(5, 0).uint(6, 0)), true);
+                send(ch, false, Wire.NAV_DISTANCE, proto(new ProtoWriter().uint(1, 352).uint(2, 25).uint(3, 350_000).uint(4, 1)), true);
             } else {
                 send(ch, false, Wire.AV_SETUP_REQUEST, proto(new ProtoWriter().uint(1, 0)), true);
             }

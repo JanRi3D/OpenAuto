@@ -9,7 +9,7 @@ public final class Wire {
 
     // §1.1 channel ids
     public static final int CH_CONTROL = 0, CH_INPUT = 1, CH_SENSOR = 2, CH_VIDEO = 3, CH_MEDIA_AUDIO = 4,
-            CH_SPEECH_AUDIO = 5, CH_SYSTEM_AUDIO = 6, CH_AV_INPUT = 7, CH_BLUETOOTH = 8;
+            CH_SPEECH_AUDIO = 5, CH_SYSTEM_AUDIO = 6, CH_AV_INPUT = 7, CH_BLUETOOTH = 8, CH_NAVIGATION = 9;
 
     // §1.1 frame flags (byte 1)
     public static final int FRAME_MIDDLE = 0, FRAME_FIRST = 1, FRAME_LAST = 2, FRAME_BULK = 3;
@@ -70,6 +70,11 @@ public final class Wire {
     public static final int BT_PAIRING_REQUEST = 0x8001, BT_PAIRING_RESPONSE = 0x8002;
     public static final int BT_PAIRING_OK = 1, BT_PAIRING_FAIL = 2;
 
+    // Navigation status channel (aasdk NavigationChannelMessage / NavigationStatus / NavigationTurnType, openDsh fork)
+    public static final int NAV_STATUS = 0x8003, NAV_TURN = 0x8004, NAV_DISTANCE = 0x8005;
+    public static final int NAV_ACTIVE = 1, NAV_INACTIVE = 2, NAV_REROUTING = 3;
+    public static final int NAV_TYPE_IMAGE = 1;
+
     public static String channelName(int ch) {
         switch (ch) {
             case CH_CONTROL: return "control";
@@ -81,6 +86,7 @@ public final class Wire {
             case CH_SYSTEM_AUDIO: return "system-audio";
             case CH_AV_INPUT: return "mic";
             case CH_BLUETOOTH: return "bluetooth";
+            case CH_NAVIGATION: return "navigation";
             default: return "ch" + ch;
         }
     }

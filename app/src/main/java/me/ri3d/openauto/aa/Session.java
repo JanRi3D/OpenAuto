@@ -24,6 +24,8 @@ public final class Session implements FrameAssembler.Sink {
         void onLog(Session s, String line);
         /** The phone asked for projected (true) or native (false) video focus, e.g. via Android Auto's Exit entry. */
         default void onVideoFocusRequest(Session s, boolean projected) { }
+        /** Google Maps' next turn changed (reader thread); read it from {@link Session#nav} right away. */
+        default void onNavigation(Session s) { }
     }
 
     /** Re-evaluated periodically for the Auto night mode. */
@@ -81,13 +83,14 @@ public final class Session implements FrameAssembler.Sink {
     private volatile long lastRx = System.currentTimeMillis();
     private final ProtoWriter pingW = new ProtoWriter(16); // the pinger thread must not share the reader's writer
 
-    private final Channel[] channels = new Channel[9];
+    private final Channel[] channels = new Channel[10];
     private final List<Channel> declared = new ArrayList<>();
     public final VideoChannel video;
     public final AudioChannel mediaAudio, speechAudio, systemAudio;
     public final MicChannel mic;
     public final SensorChannel sensor;
     public final InputChannel input;
+    public final NavChannel nav;
 
     public volatile String phoneName, phoneBrand;
     public volatile int phoneVersionMajor, phoneVersionMinor;
@@ -105,6 +108,7 @@ public final class Session implements FrameAssembler.Sink {
         sensor = declare(new SensorChannel(this));
         video = declare(new VideoChannel(this, media.video()));
         input = declare(new InputChannel(this));
+        nav = declare(new NavChannel(this));
     }
 
     private <T extends Channel> T declare(T c) {
@@ -431,6 +435,10 @@ public final class Session implements FrameAssembler.Sink {
 
     void videoFocusRequested(boolean projected) {
         listener.onVideoFocusRequest(this, projected);
+    }
+
+    void navigationChanged() {
+        listener.onNavigation(this);
     }
 
     long nowUs() {
