@@ -45,6 +45,7 @@ public final class VideoDecoder implements Media.VideoOut {
     private volatile boolean running;
     private volatile String error;
     private boolean configFed; // decoder thread only
+    private volatile int maxInputSize; // 0: the decoder's default; raised when a unit did not fit
 
     public volatile long framesRendered;
     public volatile long firstFrameAtMs, lastFrameAtMs;
@@ -123,7 +124,9 @@ public final class VideoDecoder implements Media.VideoOut {
             MediaCodec c = null;
             try {
                 c = MediaCodec.createByCodecName(name);
-                c.configure(MediaFormat.createVideoFormat("video/avc", width, height), surface, null, 0);
+                MediaFormat f = MediaFormat.createVideoFormat("video/avc", width, height);
+                if (maxInputSize > 0) f.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, maxInputSize);
+                c.configure(f, surface, null, 0);
                 c.start();
                 applyScaling(c);
                 codec = c;
@@ -149,7 +152,7 @@ public final class VideoDecoder implements Media.VideoOut {
             queue.setOpen(true); // from here on units are queued, beginning with the next keyframe
             thread = new Thread(this::loop, "video-decoder");
             thread.start();
-            Log.i(TAG, "decoder started " + width + "x" + height + " using " + codecName + (crop == CROP_SCALE ? ", cropping by scaling mode" : crop == CROP_STREAM ? ", cropping through the stream" : ""));
+            Log.i(TAG, "decoder started " + width + "x" + height + " using " + codecName + ", input buffers of " + inputs[0].capacity() + " bytes" + (crop == CROP_SCALE ? ", cropping by scaling mode" : crop == CROP_STREAM ? ", cropping through the stream" : ""));
         } catch (Throwable t) {
             error = "decoder start failed: " + t;
             Log.e(TAG, error);
@@ -252,6 +255,11 @@ public final class VideoDecoder implements Media.VideoOut {
             int idx = c.dequeueInputBuffer(10_000);
             if (idx >= 0) {
                 ByteBuffer in = inputs[idx];
+                if (len > in.capacity()) {
+                    if (maxInputSize >= len) throw new IllegalStateException(len + " byte unit, decoder kept " + in.capacity() + " byte input buffers");
+                    growInput(c, len, in.capacity());
+                    return;
+                }
                 in.clear();
                 in.put(data, 0, len);
                 c.queueInputBuffer(idx, 0, len, pts, flags);
@@ -259,6 +267,24 @@ public final class VideoDecoder implements Media.VideoOut {
             }
             drain(c); // input starved because outputs are not consumed yet
         }
+    }
+
+    /**
+     * A unit larger than the decoder's input buffers: a keyframe of a detailed map is several times the
+     * usual size, and decoders size their buffers on their own unless told. Restarts the codec with room
+     * for it; the unit is acknowledged and the stream resumes at the next keyframe.
+     */
+    private void growInput(MediaCodec c, int len, int capacity) {
+        maxInputSize = Math.max(len * 2, width * height * 3 / 4);
+        Log.w(TAG, len + " byte unit does not fit the " + capacity + " byte input buffers, restarting with " + maxInputSize);
+        running = false; // this thread ends; the restart joins it
+        new Thread(() -> {
+            synchronized (lock) {
+                if (codec != c) return; // replaced or closed meanwhile; a new codec already gets the larger size
+                stopCodec();
+                startCodec();
+            }
+        }, "video-restart").start();
     }
 
     @SuppressWarnings("deprecation")
