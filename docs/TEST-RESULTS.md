@@ -21,13 +21,14 @@ Evidence is kept in four separate classes. Nothing in one class implies another.
 | FakePhoneTest (4) | full startup to PROJECTING, media/audio acks, mic data, binding, sensors, ping, touch, shutdown both ways, version mismatch, truncated frame | pass |
 | WifiExchangeTest (3) | RFCOMM credential exchange bytes and error handling | pass |
 | WirelessTriggerTest (4) | automatic wireless trigger without Bluetooth: "any paired phone" tries every bonded phone in order and nothing else, a chosen device is the only target; failed attempts never end the loop, a phone paired while waiting is tried in the next round, a phone that took the credentials ends its round, the loop stops once the phone is on Wi-Fi and wakes from its 20 s pause when stopped | pass |
+| HotspotAddressTest (3) | the phone is sent the hotspot's address: with Wi-Fi client and hotspot running together the station on wlan0 loses to wlan1/ap0, wlan0 counts when it is the only access point, public, IPv6 and non-Wi-Fi addresses never count | pass |
 | ResampleTest (2) | 48 kHz to 16 kHz microphone fallback | pass |
 | VideoGeometryTest (3) | margins for the screen's shape (incl. the 1920x720 radio), the video view never leaves the screen, touch in content coordinates | pass |
 | UsbKindsTest (3) | the radio's DAB tuner, hubs, storage, HID and audio devices are not phones; MTP, PTP, ADB, tethering and accessory mode are | pass |
 | VideoQueueTest (5) | a frame is acknowledged when the decoder takes it, once per message; a decoder that starts late skips to the next keyframe and asks for one (once, not per frame); an overflow gives up everything until the next keyframe instead of dropping one frame | pass |
 | H264Test (5) | size and cropping read from a real phone's SPS and an x264 SPS with VUI and emulation prevention; margins written as cropping without disturbing the rest; inexact margins refused; keyframe detection | pass |
 
-46 tests in total, 3 of them opt-in (fake phone server, real phone probe, SPS rewrite of a file for
+49 tests in total, 3 of them opt-in (fake phone server, real phone probe, SPS rewrite of a file for
 ffprobe) and skipped by default.
 
 The fake phone is an independent re-implementation of the phone's half (own frame parser, JSSE

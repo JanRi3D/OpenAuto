@@ -11,10 +11,14 @@ import android.os.Looper;
 import android.util.Log;
 
 import java.lang.reflect.Method;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import me.ri3d.openauto.diag.DeviceInfo;
 
@@ -92,7 +96,10 @@ public final class Hotspot {
 
                 @Override
                 public void onStopped() {
+                    // The system withdrew it (tethering, Wi-Fi switched off). After our own stop() it is already null.
+                    if (reservation == null) return;
                     reservation = null;
+                    cb.onFailed("hotspot stopped by the system");
                 }
             }, main);
         } catch (SecurityException | IllegalStateException e) {
@@ -162,20 +169,35 @@ public final class Hotspot {
         }
     }
 
-    /** IPv4 address of the AP interface: a private address on an interface named wlan, ap, swlan or softap. */
+    /** IPv4 address of the AP interface, see {@link #apAddress(Map)}. */
     static String apAddress() {
+        Map<String, List<InetAddress>> interfaces = new LinkedHashMap<>();
         try {
             for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                String n = ni.getName().toLowerCase(Locale.ROOT);
-                if (!(n.startsWith("wlan") || n.startsWith("ap") || n.startsWith("swlan") || n.startsWith("softap"))) continue;
-                for (InetAddress a : Collections.list(ni.getInetAddresses())) {
-                    if (a.isLoopbackAddress() || a.getHostAddress().contains(":")) continue;
-                    if (a.isSiteLocalAddress()) return a.getHostAddress();
-                }
+                interfaces.put(ni.getName(), Collections.list(ni.getInetAddresses()));
             }
         } catch (Exception ignored) {
         }
-        return null;
+        return apAddress(interfaces);
+    }
+
+    /**
+     * A private IPv4 address on an interface named wlan, ap, swlan or softap. With Wi-Fi client and hotspot
+     * running together (Android 11+) wlan0 is the station and the AP is another interface, so wlan0 counts
+     * only when no other one has such an address (older devices run their AP on wlan0).
+     */
+    static String apAddress(Map<String, List<InetAddress>> interfaces) {
+        String wlan0 = null;
+        for (Map.Entry<String, List<InetAddress>> e : interfaces.entrySet()) {
+            String n = e.getKey().toLowerCase(Locale.ROOT);
+            if (!(n.startsWith("wlan") || n.startsWith("ap") || n.startsWith("swlan") || n.startsWith("softap"))) continue;
+            for (InetAddress a : e.getValue()) {
+                if (!(a instanceof Inet4Address) || !a.isSiteLocalAddress()) continue;
+                if (!n.equals("wlan0")) return a.getHostAddress();
+                if (wlan0 == null) wlan0 = a.getHostAddress();
+            }
+        }
+        return wlan0;
     }
 
     /** MAC of the interface holding {@code ip}, as "aa:bb:cc:dd:ee:ff"; empty when unknown (API 23+ hides it). */

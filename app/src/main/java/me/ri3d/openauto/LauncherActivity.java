@@ -1,6 +1,8 @@
 package me.ri3d.openauto;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.hardware.usb.UsbDevice;
@@ -19,6 +21,8 @@ import me.ri3d.openauto.ui.Ui;
 
 /** The Type B launcher: header, two large mode tiles, Self Mode and Settings stacked on the right. */
 public class LauncherActivity extends Activity implements ConnectionManager.Listener {
+    private static final int REQ_BT_ON = 10;
+
     private View wireless, wired, self, settings;
     private View minimize;
     private View statusDot;
@@ -114,6 +118,12 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         render();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_BT_ON && resultCode == RESULT_OK) onWireless();
+    }
+
     // ---- actions ---------------------------------------------------------------------------------
 
     private void onWired(UsbDevice device) {
@@ -134,6 +144,7 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         ProjectionActivity.open(this);
     }
 
+    @SuppressLint("MissingPermission") // Perms.hasBluetooth() checked first
     private void onWireless() {
         if (cm.isBusy()) {
             ProjectionActivity.open(this);
@@ -142,6 +153,12 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         if (prefs.wirelessAuto() && cm.wirelessCapable()) {
             if (!Perms.hasHotspot(this)) {
                 Perms.requestHotspot(this);
+                return;
+            }
+            BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+            if (Build.VERSION.SDK_INT >= 33 && bt != null && !bt.isEnabled() && Perms.hasBluetooth(this)) {
+                // From API 33 apps cannot switch Bluetooth on themselves: the system asks the user.
+                startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQ_BT_ON);
                 return;
             }
             cm.clearError();

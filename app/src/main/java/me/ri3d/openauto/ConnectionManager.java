@@ -92,6 +92,7 @@ public final class ConnectionManager implements Session.Listener {
     private boolean usbMode;
     private boolean wirelessMode;
     private Hotspot hotspot;
+    private Runnable btWait; // waiting for Bluetooth to come on before the hotspot starts
     private WirelessServer wireless;
     private boolean userStopped;
     private int retries;
@@ -418,28 +419,45 @@ public final class ConnectionManager implements Session.Listener {
         retries = 0;
         usbMode = false;
         wirelessMode = true;
-        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+        final BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
         if (bt == null) { setPhase(Phase.ERROR, app.getString(R.string.err_bt_none)); return; }
         if (!Perms.hasBluetooth(app)) { setPhase(Phase.ERROR, app.getString(R.string.bt_permission)); return; }
         if (!Hotspot.supported(app)) { setPhase(Phase.ERROR, app.getString(R.string.err_hotspot_unsupported)); return; }
         if (!Perms.hasHotspot(app)) { setPhase(Phase.ERROR, app.getString(R.string.err_location_permission)); return; }
-        if (!bt.isEnabled()) {
-            bt.enable();
-            long until = System.currentTimeMillis() + 6000;
-            while (!bt.isEnabled() && System.currentTimeMillis() < until) {
-                try { Thread.sleep(200); } catch (InterruptedException ignored) { }
-            }
-            if (!bt.isEnabled()) { setPhase(Phase.ERROR, app.getString(R.string.err_bt_off)); return; }
+        // From API 33 enable() fails at once for apps (the launcher asks the user to switch Bluetooth on instead).
+        if (!bt.isEnabled() && bt.getState() != BluetoothAdapter.STATE_TURNING_ON && !bt.enable()) {
+            setPhase(Phase.ERROR, app.getString(R.string.err_bt_off));
+            return;
         }
+        setPhase(Phase.HOTSPOT, null);
+        // Wait for Bluetooth on the main looper, not in a sleep loop: this runs on the UI thread.
+        final long until = System.currentTimeMillis() + 6000;
+        btWait = new Runnable() {
+            @Override
+            public void run() {
+                if (btWait != this) return; // stopped, or superseded by a newer attempt
+                if (bt.isEnabled()) {
+                    btWait = null;
+                    startHotspot(bt);
+                } else if (System.currentTimeMillis() < until) {
+                    main.postDelayed(this, 200);
+                } else {
+                    btWait = null;
+                    setPhase(Phase.ERROR, app.getString(R.string.err_bt_off));
+                }
+            }
+        };
+        btWait.run();
+    }
+
+    private void startHotspot(final BluetoothAdapter adapter) {
         final String phoneMac = prefs.btPhone();
         if (prefs.apSsid() == null) {
             SecureRandom rnd = new SecureRandom();
             prefs.put(Prefs.AP_SSID, "OPENAUTO-" + Integer.toHexString(0x1000 + rnd.nextInt(0xEFFF)).toUpperCase(Locale.ROOT));
             prefs.put(Prefs.AP_PASS, Long.toString(Math.abs(rnd.nextLong()), 36).substring(0, 10));
         }
-        setPhase(Phase.HOTSPOT, null);
         final Hotspot h = hotspot = new Hotspot(app);
-        final BluetoothAdapter adapter = bt;
         h.start(prefs.apSsid(), prefs.apPass(), new Hotspot.Callback() {
             @Override
             public void onStarted(String ssid, String passphrase, String bssid, String ip) {
@@ -491,6 +509,7 @@ public final class ConnectionManager implements Session.Listener {
     }
 
     private void stopWireless() {
+        btWait = null;
         if (wireless != null) { wireless.stop(); wireless = null; }
         if (hotspot != null) { hotspot.stop(); hotspot = null; }
     }
