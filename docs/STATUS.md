@@ -34,7 +34,7 @@ framing code with a JSSE TLS server. It proves this side of the protocol, not Go
 | Minimize button on the start screen (minimize, end the session and close, or hidden) | done | Android 16 and 4.1 emulators |
 | Reconnect after unexpected drop (USB/TCP: 3 attempts, 2/4/6 s; wireless: keep hotspot, wait again) | done vs fake phone (TCP) | Emulator: drop -> RECONNECTING -> PROJECTING within ~4 s, screen stays up |
 | Memory pressure logging (onTrimMemory) | built | |
-| Automatic wireless (BT RFCOMM server + credential exchange + hotspot + TCP 5288) | built, unverified | JVM test of the RFCOMM exchange; emulator has no Bluetooth; HSP trigger impossible from an app (see DESIGN §5) |
+| Automatic wireless (BT RFCOMM server + credential exchange + hotspot + TCP 5288; any paired phone or one chosen; outgoing RFCOMM trigger retried every 20 s until the phone reaches TCP) | built, unverified | JVM tests of the RFCOMM exchange and of the trigger (`WirelessTriggerTest`); emulator has no Bluetooth; never run with a real phone; HSP trigger impossible from an app (see DESIGN §5) |
 | Self Mode (loopback 5277 on Android 9+) | built | Needs a device with the Android Auto app |
 | Real phone acceptance, manual Wi-Fi mode | done on emulator | 30.1 fps, audio, pings, clean stop; four defects found and fixed |
 | Real phone acceptance on a physical radio | two runs done; speed, picture shape and wired mode confirmed; fixes for video artifacts, audio-only sessions and the USB permission wait not yet confirmed there | TEST-RESULTS §4b, §4c. Automatic wireless and the microphone are still unexercised there |

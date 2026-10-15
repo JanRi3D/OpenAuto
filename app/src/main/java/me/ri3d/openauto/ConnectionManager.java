@@ -215,6 +215,7 @@ public final class ConnectionManager implements Session.Listener {
         userStopped = false;
         retries = 0;
         usbMode = true;
+        wirelessMode = false;
         if (device == null) device = findUsbCandidate();
         if (device == null) {
             setPhase(Phase.ERROR, app.getString(R.string.err_no_usb_device));
@@ -382,6 +383,7 @@ public final class ConnectionManager implements Session.Listener {
         userStopped = false;
         retries = 0;
         usbMode = false;
+        wirelessMode = false;
         manualHost = host;
         manualPort = port;
         setPhase(Phase.CONNECTING, host + ":" + port);
@@ -405,7 +407,10 @@ public final class ConnectionManager implements Session.Listener {
 
     // ---- automatic wireless ------------------------------------------------------------------------
 
-    /** Bluetooth handshake + hotspot + TCP 5288 (protocol-reference §11). Needs a paired phone chosen in Settings. */
+    /**
+     * Bluetooth handshake + hotspot + TCP 5288 (protocol-reference §11), with the phone chosen in Settings or,
+     * by default, any paired phone.
+     */
     @SuppressLint("MissingPermission") // Perms.hasBluetooth() checked first
     public void startWireless() {
         if (isBusy()) return;
@@ -433,12 +438,17 @@ public final class ConnectionManager implements Session.Listener {
             prefs.put(Prefs.AP_PASS, Long.toString(Math.abs(rnd.nextLong()), 36).substring(0, 10));
         }
         setPhase(Phase.HOTSPOT, null);
-        hotspot = new Hotspot(app);
+        final Hotspot h = hotspot = new Hotspot(app);
         final BluetoothAdapter adapter = bt;
-        hotspot.start(prefs.apSsid(), prefs.apPass(), new Hotspot.Callback() {
+        h.start(prefs.apSsid(), prefs.apPass(), new Hotspot.Callback() {
             @Override
             public void onStarted(String ssid, String passphrase, String bssid, String ip) {
-                if (phase != Phase.HOTSPOT) return;
+                if (h != hotspot || phase != Phase.HOTSPOT) {
+                    // Stopped before the hotspot came up. Release it now: nobody else holds it, and Android 8+
+                    // refuses the next start while this app still has a local-only hotspot.
+                    h.stop();
+                    return;
+                }
                 wireless = new WirelessServer(new WirelessServer.Listener() {
                     @Override public void onLog(String line) { addLog(line); }
                     @Override public void onPhone(final Socket socket) {
@@ -452,7 +462,11 @@ public final class ConnectionManager implements Session.Listener {
                         });
                     }
                     @Override public void onFailed(final String reason) {
-                        main.post(() -> { if (phase == Phase.WIRELESS_WAITING) setPhase(Phase.ERROR, reason); });
+                        main.post(() -> {
+                            if (phase != Phase.WIRELESS_WAITING) return;
+                            stopWireless();
+                            setPhase(Phase.ERROR, reason);
+                        });
                     }
                 });
                 try {
@@ -468,8 +482,10 @@ public final class ConnectionManager implements Session.Listener {
 
             @Override
             public void onFailed(String reason) {
-                if (phase == Phase.HOTSPOT) setPhase(Phase.ERROR, reason);
+                if (h != hotspot) return; // an earlier attempt's
                 stopWireless();
+                // Also while waiting: Android 8+ can withdraw a running local-only hotspot (e.g. for tethering).
+                if (phase == Phase.HOTSPOT || phase == Phase.WIRELESS_WAITING) setPhase(Phase.ERROR, reason);
             }
         });
     }

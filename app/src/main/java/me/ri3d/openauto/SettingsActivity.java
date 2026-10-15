@@ -289,7 +289,7 @@ public class SettingsActivity extends Activity {
             }
         }));
         String phone = prefs.btPhone();
-        String phoneLabel = phone == null ? getString(R.string.bt_phone_none) : bondedName(adapter, phone);
+        String phoneLabel = phone == null ? getString(R.string.bt_phone_any) : bondedName(adapter, phone);
         add(Rows.action(this, s(R.string.set_bt_phone), phoneLabel, v -> pickPhone(adapter)));
     }
 
@@ -314,14 +314,11 @@ public class SettingsActivity extends Activity {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             return;
         }
-        if (devs.isEmpty()) {
-            Toast.makeText(this, R.string.bt_no_bonded, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        CharSequence[] names = new CharSequence[devs.size()];
-        for (int i = 0; i < names.length; i++) names[i] = devs.get(i).getName() + "\n" + devs.get(i).getAddress();
+        CharSequence[] names = new CharSequence[devs.size() + 1];
+        names[0] = getString(R.string.bt_phone_any);
+        for (int i = 1; i < names.length; i++) names[i] = devs.get(i - 1).getName() + "\n" + devs.get(i - 1).getAddress();
         Dialogs.builder(this).setTitle(R.string.bt_pick_title).setItems(names, (d, w) -> {
-            prefs.put(Prefs.BT_PHONE, devs.get(w).getAddress());
+            prefs.put(Prefs.BT_PHONE, w == 0 ? null : devs.get(w - 1).getAddress()); // null: any paired phone
             current = -1;
             show(BLUETOOTH);
         }).show();

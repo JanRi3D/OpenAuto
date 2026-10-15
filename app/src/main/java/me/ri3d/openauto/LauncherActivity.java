@@ -144,10 +144,6 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
                 Perms.requestHotspot(this);
                 return;
             }
-            if (prefs.btPhone() == null) {
-                Dialogs.info(this, getString(R.string.wireless), getString(R.string.err_bt_no_phone));
-                return;
-            }
             cm.clearError();
             cm.startWireless();
             if (cm.phase() == ConnectionManager.Phase.ERROR) {

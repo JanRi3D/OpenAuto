@@ -90,9 +90,11 @@ No USB port that Android can see? Use [Wi-Fi](#wireless-by-ip-address) instead.
 
 ### Automatic wireless (experimental)
 
-Needs a Bluetooth adapter that apps can use, the phone paired and selected in Settings › Bluetooth,
-and a hotspot the app can start. Settings › Wireless shows what is missing. The radio starts its
-hotspot, hands the Wi-Fi credentials to the phone over Bluetooth and waits for it on TCP 5288.
+Needs a Bluetooth adapter that apps can use, the phone paired with the radio, and a hotspot the app
+can start. Settings › Wireless shows what is missing. The radio starts its hotspot, hands the Wi-Fi
+credentials to the phone over Bluetooth and waits for it on TCP 5288. By default any paired phone
+will do: the radio accepts whichever phone connects and reaches out to each paired phone every 20 s
+until one arrives. Settings › Bluetooth › Phone for wireless limits this to one phone.
 Commercial dongles also present a Bluetooth headset profile, which an app cannot do with public
 APIs; whether a phone connects without it is not verified.
 

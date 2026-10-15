@@ -138,9 +138,8 @@
     <string name="set_bt_discoverable">Make discoverable</string>
     <string name="set_bt_discoverable_desc">Pair a new phone from the phone’s Bluetooth settings</string>
     <string name="set_bt_phone">Phone for wireless</string>
-    <string name="bt_phone_none">None selected</string>
+    <string name="bt_phone_any">Any paired phone</string>
     <string name="bt_pick_title">Choose a paired phone</string>
-    <string name="bt_no_bonded">No paired devices</string>
 
     <!-- Wireless -->
     <string name="set_wireless_auto">Automatic connection</string>
@@ -216,7 +215,6 @@
     <string name="phase_wireless_waiting">Waiting for the phone over Bluetooth…</string>
     <string name="err_bt_off">Bluetooth is off and could not be turned on</string>
     <string name="err_bt_none">This device has no Bluetooth adapter apps can use</string>
-    <string name="err_bt_no_phone">Choose the paired phone in Settings › Bluetooth first</string>
     <string name="err_hotspot_unsupported">This device cannot start a Wi-Fi hotspot from an app</string>
     <string name="err_location_permission">Android 8 and newer need the location permission to start a hotspot</string>
     <string name="wireless_auto_waiting">Tap to wait for a paired phone</string>
