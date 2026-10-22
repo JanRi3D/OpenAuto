@@ -50,6 +50,9 @@ public class FakePhoneServerTest {
         boolean first = true;
         while (!server.isClosed()) {
             final FakePhone phone = new FakePhone(creds, server, video, true);
+            // FAKE_PHONE_AUDIO_STALL=<ms>: stream media audio that stalls this long every 5 s; FAKE_PHONE_AUDIO_BURST=1 sends the held-back packets afterwards
+            if (System.getenv("FAKE_PHONE_AUDIO_STALL") != null) phone.audioStallMs = Integer.parseInt(System.getenv("FAKE_PHONE_AUDIO_STALL"));
+            phone.audioBurst = "1".equals(System.getenv("FAKE_PHONE_AUDIO_BURST"));
             Thread t = new Thread(phone, "fake-phone");
             t.start();
             if (dropAfter > 0 && first) {

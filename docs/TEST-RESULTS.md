@@ -54,7 +54,7 @@ Head unit = this app on the emulator; phone = fake phone on the host, reached at
 | Process memory (dumpsys meminfo, PSS) | idle 7.0 MiB (Dalvik 1.9, native 2.0); projecting 16.0 MiB (Dalvik 4.3, native 2.0, unknown 2.3); after 3 cycles 16.4 MiB; 25 threads |
 | Phone drops mid-session (fake phone closes the socket after 20 s) | "RECONNECTING: connection closed by the phone", retry after 2 s, READY, PROJECTING; projection screen stayed in front; second session ran 64 s at 29.7 fps |
 | Repeated microphone activation | not testable: emulator has no capture device at any tried rate |
-| Audio interruption and recovery | not tested on emulator (fake phone sends one PCM packet; duck/focus logic exercised in FakePhoneTest only) |
+| Audio stalls (`FAKE_PHONE_AUDIO_STALL=400`: media audio stops for 400 ms every 5 s) | Before: a track that ran dry played each packet on arrival. AudioFlinger counted 52 underrun cycles in 40 s when the phone sent the held-back audio afterwards (`FAKE_PHONE_AUDIO_BURST=1`, all within the first 25 s) and 556 when it skipped it. Now a track that runs dry is paused until its 500 ms buffer is full again: 0-9 and 64-96 cycles (one refill every second stall, as each skip takes 400 ms out of the buffer). API 36 AVD: 0 underruns. A single 20 ms packet now plays; before, it waited for a full buffer and never did |
 
 Not measurable on the emulator: hardware decoder behaviour (the emulator decoder is software),
 audio audibility, CPU load representative of a radio, USB host, Bluetooth.

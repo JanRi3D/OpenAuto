@@ -40,6 +40,9 @@ final class FakePhone implements Runnable {
             finished = new CountDownLatch(1);
     volatile Exception error;
     volatile long videoAcks, touches, videoSent, videoHeldBack;
+    /** >= 0: stream media audio, stalling this long every 5 s; afterwards send the held-back packets at once (burst) or skip them. */
+    int audioStallMs = -1;
+    boolean audioBurst;
     private volatile int maxUnacked = Integer.MAX_VALUE, streamGeneration;
     private boolean tlsStarted;
     private volatile boolean streaming;
@@ -249,7 +252,7 @@ final class FakePhone implements Runnable {
             case Wire.CH_MEDIA_AUDIO:
                 if (id == Wire.AV_SETUP_RESPONSE) {
                     send(ch, false, Wire.AV_START, proto(new ProtoWriter().int32(1, 3).uint(2, 0)), true);
-                    send(ch, false, Wire.AV_MEDIA_WITH_TIMESTAMP, new byte[8 + 3840], true);
+                    if (audioStallMs >= 0) streamAudio(); else send(ch, false, Wire.AV_MEDIA_WITH_TIMESTAMP, new byte[8 + 3840], true);
                 } else if (id == Wire.AV_MEDIA_ACK) {
                     assertEquals(3, new ProtoReader(d, off, len).nextField(1).int32());
                     audioAcked.countDown();
@@ -339,6 +342,37 @@ final class FakePhone implements Runnable {
         }, "fake-phone-video");
         streamer.setDaemon(true);
         streamer.start();
+    }
+
+    /** A 375 Hz tone, 48 kHz stereo in packets of 2048 frames, sent in real time with the stalls of {@link #audioStallMs}. */
+    private void streamAudio() {
+        Thread t = new Thread(() -> {
+            byte[] body = new byte[8 + 8192];
+            for (int i = 0; i < 2048; i++) { // exactly 16 periods per packet, so packets join without a click
+                short s = (short) (3000 * Math.sin(2 * Math.PI * 375 * i / 48000.0));
+                for (int k = 8 + i * 4; k < 12 + i * 4; k += 2) { body[k] = (byte) s; body[k + 1] = (byte) (s >> 8); }
+            }
+            long start = System.currentTimeMillis(), sent = 0, stallAt = 5000;
+            try {
+                while (!sock.isClosed()) {
+                    long ms = System.currentTimeMillis() - start;
+                    if (audioStallMs > 0 && ms >= stallAt) {
+                        Thread.sleep(audioStallMs);
+                        stallAt += 5000;
+                        if (!audioBurst) sent = (System.currentTimeMillis() - start) * 48 / 2048;
+                    } else if (sent < ms * 48 / 2048) {
+                        send(Wire.CH_MEDIA_AUDIO, false, Wire.AV_MEDIA_WITH_TIMESTAMP, body, true);
+                        sent++;
+                    } else {
+                        Thread.sleep(5);
+                    }
+                }
+            } catch (Exception e) {
+                if (!sock.isClosed()) error = e;
+            }
+        }, "fake-phone-audio");
+        t.setDaemon(true);
+        t.start();
     }
 
     void close() {
