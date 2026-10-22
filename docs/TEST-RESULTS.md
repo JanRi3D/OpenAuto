@@ -7,9 +7,10 @@ Evidence is kept in four separate classes. Nothing in one class implies another.
 | Check | Result | Command |
 |---|---|---|
 | Debug APK, minSdk 16, AGP 9.3.3 / Gradle 9.5.0 / JBR 21 | builds; `aapt2 dump badging` shows `minSdkVersion:'16'` | `gradlew :app:assembleDebug` |
-| Android Lint (NewApi, MissingPermission fatal) | 0 errors | `gradlew :app:lintDebug` |
+| Android Lint (NewApi, MissingPermission fatal) | 0 errors; 16 warnings, the same as before the CarPlay work. The transport check's deliberate calls (the adapter address, RFCOMM sockets, `cancelDiscovery` below API 31, the USB answer receiver below API 33) carry narrow suppressions with the reason next to them | `gradlew :app:lintDebug` |
 | R8 shrinking, debug and release | debug `classes.dex` 1.45 MiB, debug APK 0.95 MiB, unsigned release APK 0.73 MiB; JNI class and method names kept | `gradlew :app:assembleRelease` |
 | Native shim `libsystls.so` (NDK 23.2.8568313, CMake 3.22.1) | builds for armeabi-v7a (8.1 KiB), arm64-v8a (12.3 KiB), x86 (9.4 KiB), x86_64 (11.9 KiB) | part of `assembleDebug` |
+| CarPlay debug screens are debug-only (2026-10-13, with the transport check) | debug: `MfiProbeActivity` and `TransportCheckActivity` in the manifest with their own launcher entries, plus `WRITE_EXTERNAL_STORAGE` with `maxSdkVersion` 18 for the report file; 101 `carplay` classes in `classes.dex` (38 of them the transport check, lambdas and inner classes included), which holds 10,852 method references (`method_ids_size`, the count the single-dex limit of 65,536 applies to; 10,040 before the CarPlay work) and 1,517 classes (1,406 before), 1,680,632 B (1,541,644 B before); debug APK 1,072,068 B (1,004,513 B before), packaged from scratch. Release: no `carplay` class, no debug entry, no storage permission, 5,046 method references and 986,992 B `classes.dex` (986,972 B before), because nothing outside the debug screens calls the CarPlay code yet | `aapt2 dump xmltree`, `aapt2 dump badging`, `dexdump -f` |
 
 ## 2. Unit and integration tests (JVM, `gradlew :app:testDebugUnitTest`)
 
@@ -27,9 +28,54 @@ Evidence is kept in four separate classes. Nothing in one class implies another.
 | UsbKindsTest (3) | the radio's DAB tuner, hubs, storage, HID and audio devices are not phones; MTP, PTP, ADB, tethering and accessory mode are | pass |
 | VideoQueueTest (5) | a frame is acknowledged when the decoder takes it, once per message; a decoder that starts late skips to the next keyframe and asks for one (once, not per frame); an overflow gives up everything until the next keyframe instead of dropping one frame | pass |
 | H264Test (5) | size and cropping read from a real phone's SPS and an x264 SPS with VUI and emulation prevention; margins written as cropping without disturbing the rest; inexact margins refused; keyframe detection | pass |
+| LocalMfiAuthenticatorTest (16) | CarPlay accessory identity, synthetic keys from the host JCA: a PKCS#8 P-256 key with a DER certificate, and with a real one-certificate PKCS#7 envelope (the host's own PKCS#7 parser reads it), whose bytes come back unchanged as independent copies within the output limit; explicitly encoded P-256 accepted; P-384, secp256k1 (named and explicit), brainpoolP256r1, RSA, a key of another certificate, empty, two-certificate and non-SignedData envelopes, missing, empty, truncated, oversized (16 KiB + 1), trailing-data and encrypted files each refused with their own reason; only 32-byte digests signed (0, 20, 31, 33, 64 refused); signatures verify with the host's `NONEwithECDSA` and not with `SHA256withECDSA` (no second hash); RFC 6979 A.2.5 known answers; altered digest, key or signature fail; reload and 8 threads give identical signatures | pass |
+| CsmMessageTest (8) | iAP2 control session framing against hand-written bytes: 0x4040, a 16-bit length counting the 6-byte header, message ID, parameters whose 16-bit length counts their 4-byte header; parameter order and repeated IDs kept; group parameters nest; the 65,535-byte maximum both ways; wrong start bytes, lengths below the headers, parameters running past the message and leftover bytes refused; the reader reassembles every split point, byte-by-byte and random chunks, and fails at the first wrong byte | pass |
+| ControlSessionTest (19) | identification and authentication against a SIMULATED phone (scripted in the test, own byte parser, signatures checked with the host JCA against the key in the certificate it received) and a synthetic identity: identification then authentication and the reverse (provisional) both complete only on this session's IdentificationAccepted plus AuthenticationSucceeded, and the first exchange is recorded; a sent signature is never success; concatenated messages, every split point of every message, byte-by-byte and random chunks; malformed framing; eleven out-of-order or unsolicited verdicts; wrong challenge lengths or parameters; AuthenticationFailed final and never retried; a rejected identification corrected at once; rejections naming nothing, an unsent parameter or a field without a correction end the session; twelve corrections compared by content (reordered repeats, parameters or group parts, unrelated changes, partial corrections refused; changed, dropped or group-part corrections sent); rejected too often; timeouts (also after a signature or a correction without a verdict); link loss, also when complete and while sending; a failure keeps its first reason and clears the progress. Every acceptance is SIMULATED | pass |
+| Iap2LinkLayerTest (15) | iAP2 link against packets written and checked by hand: the SYN byte for byte; thirteen SYN+ACKs refused field by field, each as invalid or as unsupported (version, empty or broken session tables, renamed or re-versioned or unproposed sessions, no window, packets too short for data, ZeroACK, zero timeout, acknowledgement timeout not shorter, broken payload); the phone's limits taken beyond the proposal (window 200 capped at 127, 1024-byte packets both ways, acknowledging at the smaller window, zero retransmissions); a 500-byte message split into ten 64-byte packets within a window of two; the message limit apart from the packet limit; the bounded send queue; in-order delivery with cumulative and piggybacked acknowledgements; duplicates and gaps; incoming EAK counted, no EAK ever sent; damaged headers, payloads, lengths and garbage; every split point of a packet stream; go-back retransmission and its limit; 600 packets each way across several wraparounds; detection (echo in pieces, repeats, another answer skipped until the retries run out, no answer, a phone SYN during detection); SYN retries, a lost final ACK, a different SYN+ACK, simultaneous SYN, a resynchronization request and the new link after it; RST, SLP, transport loss, close, a failing transport; data from an earlier link and for another session | pass |
+| Iap2ConnectionTest (10) | the Bluetooth profile end to end (detection, link, control session) against a SIMULATED phone whose link and control session are written in the test, over a seeded wire that loses (15 %), repeats (10 %), damages (10 %) and splits packets: a certificate response over several 64-byte packets arrives intact; 20 seeds in both orders complete identification and authentication; the phone's own parser checks every identification field and that nothing else (no CarPlay, External Accessory, HID, USB) is advertised; a rejected configured Name comes back as "OpenAuto" with everything else unchanged and is accepted; rejected mandatory fields (transport component, model, language, message list, a default name) end the session with the field named and close the link; a reset clears the session and earlier or unsolicited verdicts on the new link end it; a silenced link, withheld verdicts, a disconnect halfway through the certificate, a failing transport and a refused authentication each end cleanly. Every acceptance is SIMULATED | pass |
+| Iap2StreamTest (5) | the connection over real sockets (TCP loopback standing in for RFCOMM), real threads and the system clock, against the same SIMULATED phone pumped on its own thread: the handshake completes and a stop from another thread ends the link with RST, which the phone receives; completes over a wire that loses, repeats, damages and splits the phone's packets (10 % each) with real retransmission timing; the time limit ends a synchronized link with RST within the limit; the phone closing its socket ends the link as DISCONNECTED with "end of stream" recorded; two messages sent after the handshake are counted and kept with their IDs, unanswered. Completion is latched for the report, since the session clears its state once the link is gone. Every acceptance is SIMULATED | pass |
+| BluetoothProfileTest (3) | the profile's IdentificationInformation byte for byte against a hand-written vector; bounds on text (empty, zero character, 63-byte limit counted in UTF-8) and on the Bluetooth address (length, all zero, Android's placeholder); only a configured Name is correctable, each of the twelve other fields fails with its reason, also when rejected together with the Name | pass |
+| ReviewRegressionTest (5) | regressions from an independent review: P-256 parameters with cofactor 2 refused for the key, the certificate and both (loaded before the fix); named, explicit and explicit-without-cofactor P-256 still load; a failed session of an earlier link no longer closes the next link during detection, during synchronization, or after a reset (each fails with the fix reverted) | pass |
+| IdentificationCorrectionRegressionTest (4) | regression from the same review: groups `(0,"a"),(1,"b")` and `(0,"a, 1=b")` compare as different (they collided as text); order ignored but a repeated part or parameter counted; through the whole rejection path a correction of a rejected Name that also rewrites the unrejected group 17 is refused, the same correction with group 17 only reordered is sent. Synthetic payloads; the Bluetooth profile itself only ever changes the Name | pass |
+| ProbeRunnerTest (4, debug unit tests in `src/testDebug`) | the probe's file operations across activity instances, with a real worker thread: runs and a delete of three instances never overlap; a cancelled run (Back, recreation) has returned before the next operation starts; an operation cancelled before it starts never runs; a result whose instance is gone is dropped while a live one is delivered | pass |
+| ProbeRecordTest (8, `src/testDebug`) | the probe's saved run record: empty, a malformed Unicode escape, `digest=00`, a digest with one hex digit too many, each of the six fields missing, seven bad process IDs, a non-hex letter, an Arabic-Indic digit, hashes and signatures one byte short or long are each reported as unusable with the reason (the probe then skips the restart check and runs fresh); a valid record, upper or lower case, reloads and all four checks pass; a well-formed record with one changed signature is a failed check, not a skip; a missing fixture and a cancellation still propagate | pass |
+| RfcommCheckTest (11, `src/testDebug`) | the RFCOMM check against a fake endpoint that blocks like Android's sockets until closed: an echo split over two reads, an echo after other bytes, other bytes then end of stream (no echo), the 64-byte read cap, a refused connection sends nothing, a SecurityException is an observation; the time limit closes a blocked connect and a blocked read within the limit (the socket observation stays "connected"); Cancel from another thread closes a blocked connect at once and adds no time-limit note; Cancel before the run never opens. A stop at the limit carries the note that it is no evidence against CarPlay | pass |
+| HandshakeCheckTest (4, `src/testDebug`) | the debug handshake check's report: against the loopback phone, eight lines in order (socket, link DOWN at the time limit, the negotiated values, link counters, the session with "identification ACCEPTED, authentication SUCCEEDED" and the exchange the phone started, the SYNTHETIC verdict marked as not iPhone acceptance, no messages after the handshake, the time-limit note); a refused connection starts no link and writes nothing; Cancel closes a blocked connect, and a connected peer that never echoes is ended by Cancel within the run with only detection bytes written and no time-limit note; Cancel before the run never opens | pass |
+| TransportReportTest (4, `src/testDebug`) | the Bluetooth summary names the first of: no adapter exposed (with "does not prove the device has no Bluetooth hardware"), permission denied, disabled (with the state), adapter address unavailable (none, the 02:00:00:00:00:00 placeholder, not an address), address available | pass |
+| UsbDescriptorsTest (5, `src/testDebug`) | raw descriptors: device, configuration, interface, three endpoints, a class-specific and an interface-association descriptor read field by field; a zero length stops parsing instead of looping; a descriptor running past the end and one shorter than its type are shown as bytes, never read past; high-bandwidth endpoint sizes | pass |
+| RawEcdsaSignatureTest (4) | fixed DER vectors: sign padding, short integers, the 72-byte maximum; negative, zero, ≥ n and needlessly padded integers, wrong and indefinite lengths, trailing data and wrong structure refused; raw values of 0 or ≥ n and lengths other than 64 refused | pass |
 
-49 tests in total, 3 of them opt-in (fake phone server, real phone probe, SPS rewrite of a file for
-ffprobe) and skipped by default.
+174 tests: 171 pass, 3 are opt-in and skipped by default (`FakePhoneServerTest.serve`,
+`RealPhoneProbeTest.probe`, `H264Test.rewriteFile`), 0 fail; 125 of them are the CarPlay tests
+(36 of those debug unit tests in `src/testDebug`), the other 49 are the Android Auto tests. This project's AGP creates no release unit-test task.
+Each of these deliberate breakages of the CarPlay code made at least one test fail: in the loader and
+signer a second hash, no curve comparison, no key match, several certificates allowed, no size limit,
+a loose digest length, a shared certificate array, lenient DER, zero values allowed, the cofactor not
+checked; in the control session a sent signature counted as success, a challenge or
+AuthenticationSucceeded accepted at any time, a retry after AuthenticationFailed, no timeout restart
+on progress, handshake messages passed on after completion, a complete session surviving link loss,
+one identification attempt too many, unknown messages ignored, link errors swallowed, no start-byte
+check, no reader reset, parameters shorter than their header, a retry after a rejection naming
+nothing or an unsent parameter, progress kept after a failure, a later failure replacing the first,
+repeated parameters or group parts compared in order, groups compared as joined text, unrelated or
+partial corrections allowed; in the link no header or payload checksum check, any sequence number
+accepted, no retransmission, acknowledgements compared without wraparound, no splitting, the old
+one-message-per-packet limit, any SYN+ACK accepted, the phone's window or packet length treated as a
+ceiling under the proposal, ZeroACK not recognised, a renamed session accepted, incoming packets
+limited to the proposal, acknowledgements ignoring the windows, an uncapped send window, detection
+skipped or any answer taken as the echo, a resynchronization request treated as an error,
+simultaneous SYN without RST, an EAK list taken as data, data from an earlier link accepted, a
+repeated SYN+ACK not acknowledged, endless retransmission, every packet acknowledged at once, no send
+window, an unbounded queue; in the connection the old session reused, a failed session keeping its
+link, and the last link's failed session closing a new one; in the profile every field correctable,
+a CarPlay parameter advertised, text without its terminating zero, an all-zero address accepted; in
+the probe runner a result delivered to a destroyed instance, an operation run after its cancellation;
+in the probe record a lenient length, the record read outside the recovery boundary, other scripts'
+digits taken as hex, a broad catch around the comparison; in the transport check a stop that does not
+close the socket, a check that opens after Cancel, the time-limit note after Cancel, the echo looked
+for only at the start, a descriptor read past its own length; in the stream a stop that sends no
+RST, completion read from the session after its link is gone, a stop that also closes the socket
+reported as the peer hanging up.
 
 The fake phone is an independent re-implementation of the phone's half (own frame parser, JSSE
 TLS). It validates this receiver's behaviour and encodings, not Google's app.
@@ -96,6 +142,54 @@ phone. API 16 emulator 1280x480 unless stated.
 | Video output Direct (SurfaceView, scaling-mode crop) | Android 16 emulator: correct picture and touch (379,198), 29.9 fps. API 16 emulator: stretched (§3a) |
 | Video output Direct 2 (SurfaceView, margins written into the SPS) | Decoders accept it: API 16 reports `crop-top=90, crop-bottom=389`, ffmpeg decodes the rewritten streams as 800x300 and 800x380. But API 16 shows a software decoder's output uncropped, and the Android 16 emulator's decoder applies the size without the top offset (picture shifted down by the margin). Hence not the default |
 | SurfaceView smaller than the screen (Bars with Direct) | still black on the API 16 emulator, unexplained (§3a); Auto does not use it there |
+
+### 3c. Synthetic MFi probe (2026-10-12, debug APK SHA-256 `2ba759c9…a6cd50`)
+
+Debug builds have a second launcher entry, "Synthetic MFi probe". It makes throwaway P-256 identities
+in `files/carplay-auth-probe`, writes each as a DER certificate and as a one-certificate PKCS#7
+envelope, and runs them through the production loader and signer. All of it is synthetic: it shows
+the code runs on that runtime, not that an iPhone accepts any identity.
+
+| Runtime | Result |
+|---|---|
+| API 16 emulator, x86, Dalvik 1.6.0, `generic_x86/google_sdk_x86/generic_x86:4.1.2/MASTER/eng.wdu.20191213.040452:eng/test-keys` | 33 of 33 checks pass in 311 ms: both formats load, certificate bytes unchanged, copies independent, output limit enforced, signatures verify (BouncyCastle verifier with the generator's public key) and fail for an altered digest, digests of 0/20/31/33/64 bytes refused, RFC 6979 known answer matches, five invalid identities refused with the expected reason. Signing 2.2 ms (DER) and 3.2 ms (PKCS#7), mean of 20 |
+| Same, "Restart process" | the process was killed and reopened by an alarm (pid 2091 to 2206); both identities reloaded from disk with unchanged certificates and the same deterministic signatures; 37 of 37 |
+| Same, "Run again" and "Delete fixtures" | reload in the same process reported as such (37 of 37); deletion leaves `files/` empty. The run record holds certificate hashes, one digest and its signatures, no key material |
+| Android 16 emulator, x86_64, `google/sdk_gphone64_x86_64/emu64xa:16/BE4B.251210.005/14574095:user/release-keys` | 33 of 33; signing 10–12 ms (debug build on ART). "Restart process": the system blocks the alarm's activity start (background activity launch); reopened from the launcher, the restart check passes (pid 2974 to 4787, 37 of 37) |
+| API 16 emulator, same image, debug APK SHA-256 `6e98b186…5a102f54` (adds the iAP2 control session) | 38 of 38 checks in 879 ms. New section: identification, certificate and signature sent with the phone's messages fed byte by byte, the signature verifies against the generated key, not ready on the signature alone, ready only after the SIMULATED phone's AuthenticationSucceeded, and a SIMULATED AuthenticationFailed ends the session. The phone is scripted inside the probe: a test result, not an iPhone. Signing 7.8–8.1 ms on this cold-booted emulator (2.2–3.2 ms in the first run) |
+| API 16 emulator, same image, debug APK SHA-256 `9bcc4364…4eacb332` (adds the iAP2 link layer) | 46 of 46 checks in 367 ms. New section, link and control session against a phone link scripted inside the probe: synchronized on the phone's 48-byte packets and session 9; the certificate response arrived intact over 10 packets; the signature verifies; not ready on the signature alone, ready only after the SIMULATED AuthenticationSucceeded; sequence numbers wrapped past 255 on both sides; three damaged copies and three repeats of phone packets dropped (`corrupt 3, duplicate 3`); RST from the phone ends link and session. A test result, not an iPhone |
+| API 16 emulator, same image, debug APK SHA-256 `afe5b19c…0d37527c` (2026-10-13, adds the Bluetooth profile) | 50 of 50 checks in 335 ms. Bluetooth profile against a phone link scripted inside the probe: detection bytes first and the SYN only after their echo; synchronized on the phone's 48-byte packets, window 2, control session 10; the identification carries exactly parameters 0-9, 12, 13 and 17; a rejected configured Name came back as "OpenAuto" with every other parameter unchanged; the certificate response arrived intact over 10 packets; the signature verifies; not identified and authenticated on the signature alone, complete only after the SIMULATED verdicts; sequence numbers wrapped on both sides; three damaged copies and three repeats dropped; RST ends link and session; a rejected BluetoothTransportComponent ends the session with that field named and closes the link. A test result: not iPhone acceptance, and no CarPlay |
+| API 16 emulator, same image, debug APK SHA-256 `a1a64b8b…0f81f982` (2026-10-13, probe operations owned and serialized) | 50 of 50 checks. Back right after launch, then reopening (3 times): the first instance's run was cancelled by its owner and stopped at its next step, then the reopened instance's run started and passed. Recreation during a run (`am display-size`, twice): the new instance's run was queued behind the old one, which stopped after its cancellation before the new one started; the new run passed. Two instances alive in one task: the top one's run was queued behind the bottom one's; the top one deleted the fixtures (the directory was gone) while the other stayed alive; after Back the remaining instance regenerated the fixtures and passed. Order and timing from logcat tag `MfiProbeRunner` |
+| Android 16 emulator, x86_64 (2026-10-13), two probe instances in freeform windows | A run record left at 0 bytes by an earlier session (the emulator was stopped right after a run, before the write reached the disk) made every run fail at the restart check, and the fixtures were never regenerated. The record is now written to a temporary file, flushed and renamed, and an unreadable record is reported as "restart check skipped" before a fresh run: with the 0-byte record still present the next run passed 50 of 50 and wrote a 639-byte record. Then three times: "Run again" tapped in one instance and "Delete fixtures" in the other while that run was going; the delete was queued behind the run, started only after it finished, and the run passed (54, 50, 50 checks). The emulator's freeform settings were set back afterwards |
+| API 16 emulator, debug APK SHA-256 `569d5b04…83cf4dbc` (final for this round) | normal run 54 of 54 (restart check against the earlier process); Back right after launch: the run was cancelled and stopped, then the reopened instance's run passed 50 of 50; "Restart process" queued like any operation, the new process (pid 2221) passed its restart check, 54 of 54 |
+| API 16 emulator, debug APK SHA-256 `331687fc…6c9000fb` (2026-10-13, record recovery) | restart check against the record the new writer left: 54 of 54. Record replaced by an edited copy before each start: `digest=00` → "saved record unusable (digest has 2 hex digits, expected 64): restart check skipped, a fresh run follows", 50 of 50; one hex digit too many → "65 hex digits", 50 of 50; a malformed Unicode escape → "not a properties file: Invalid Unicode sequence", 50 of 50; empty → "no pid", 50 of 50. One signature changed by one hex digit (well-formed) → `SYNTHETIC FAIL der: same deterministic signature as the earlier run`, 54 checks, 1 failed; the next run passed 54 of 54 against the record that run rewrote |
+| ARMv7 | not run: the `Adayo_ARM` AVD (armeabi-v7a, API 17) does not start, 32-bit ARM is not supported by the QEMU2 emulator. Needs the physical radio |
+
+### 3d. Transport check (2026-10-13, debug APK SHA-256 `331687fc…6c9000fb`)
+
+Debug builds have a third launcher entry, "Transport check". It reports what Android exposes for the
+transports CarPlay could use and saves that as a text file (also written to logcat, tag
+`TransportCheck`). Passive until a button is pressed; USB access is asked for one selected device,
+which is opened only to read its raw descriptors; an RFCOMM check runs only for a selected paired
+phone and sends only the six detection bytes. Emulator results show the code paths, not the radio.
+
+| Runtime | Observed |
+|---|---|
+| API 16 emulator, x86 | SDK_INT 16, ABI x86, kernel 3.10.0+. Bluetooth feature declared, but `getDefaultAdapter()` returns nothing: "no adapter exposed ... does not prove the device has no Bluetooth hardware". BLUETOOTH and BLUETOOTH_ADMIN granted at install. USB host not declared, 0 devices. `WRITE_EXTERNAL_STORAGE` granted at install, but this AVD has no SD card (`hw.sdCard=no`), so the report went to `files/transport-check/` and was read back with `run-as`; 23 lines in logcat |
+| Android 16 emulator, x86_64 | SDK_INT 36. Permission dialog answered "Don't allow": recorded as `BLUETOOTH_CONNECT denied BLUETOOTH_ADVERTISE denied`, status "permission denied", name and address withheld (SecurityException), paired devices not listed. Answered "Allow": status "on, adapter address unavailable: 02:00:00:00:00:00 is the placeholder ...", paired devices none. Bluetooth switched off (`cmd bluetooth_manager disable`), Refresh: "Bluetooth disabled (off)", none listed. BLUETOOTH_SCAN reported as not declared. USB host not declared, 0 devices. Report saved to `/storage/emulated/0/Android/data/me.ri3d.openauto/files/transport-check/` and pulled with adb (1,722 B) |
+
+Not exercised on any device yet: reading USB descriptors (neither AVD has USB host or a device),
+the RFCOMM connect, wait, Cancel and time limit with Android's real sockets (no paired phone on
+the emulators; the unit tests use a fake endpoint), an adapter address that Android hands out
+(needs Android 5.1 or older with Bluetooth), and the external report folder on Android 4.1–4.3.
+
+The two "iAP2 handshake" buttons per paired phone (added 2026-10-22) run the Bluetooth profile's
+link and control session over the connected or accepted socket with the SYNTHETIC identity the MFi
+probe leaves in `files/carplay-auth-probe/pkcs7` (run that probe once first; without it the check
+reports "not started"). The report lists the socket, how the link ended, the phone's SYN+ACK values,
+link counters, how far the session got and which exchange the phone started, the verdict, any
+messages the phone sent afterwards, and why the input ended. Exercised only in JVM tests against the
+scripted phone; no emulator has a paired phone.
 
 ## 4. Physical radio and phone results
 
@@ -188,3 +282,20 @@ crop ("Direct") in particular is expected, not known, to be right on this radio'
 if the picture is squeezed there, "Direct 2" and "Compatible" are the alternatives (README, Settings).
 
 Still unexercised on the radio: Bluetooth/hotspot (automatic wireless), the microphone.
+
+### 4d. Transport check on the radio
+
+**Not run yet.** Steps: install the debug APK (`app/build/outputs/apk/debug/app-debug.apk`) over ADB;
+open "Synthetic MFi probe" once (it leaves the synthetic identity the handshake needs); open
+"Transport check" from the launcher; Save report (passive part). With the iPhone on USB: "Read
+descriptors" for its row only, accept Android's dialog, Save report. With the iPhone paired in the
+radio's Bluetooth settings (if Android lists it): "Connect (20 s)", then "Wait for it (60 s)", one
+Cancel test, Save report. Then "iAP2 handshake: connect" and, if that socket never connects,
+"iAP2 handshake: wait" (60 s each; the phone may show a prompt or nothing at all), Save report.
+What the handshake report would settle: whether the phone echoes the detection bytes, whether it
+answers the SYN and with which values, which exchange it starts first, and what it rejects in the
+identification or the synthetic certificate. The expected end is a refused certificate; a verdict
+line reporting acceptance would be unexpected and would need a second look before anything is
+concluded. Pull `/sdcard/Android/data/me.ri3d.openauto/files/transport-check/` and
+`adb logcat -d -s TransportCheck:I`. A timeout is no evidence against CarPlay; a
+connected socket without the echo says nothing about iAP2 either.

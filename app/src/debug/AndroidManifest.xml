@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: the synthetic accessory-authentication probe and the transport check get their own launcher entries. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The transport check saves its report in the app's external files folder, which needs this up to Android 4.3. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="18" />
+
+    <application>
+        <activity
+            android:name=".carplay.auth.MfiProbeActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout"
+            android:exported="true"
+            android:label="Synthetic MFi probe"
+            android:taskAffinity="me.ri3d.openauto.mfiprobe">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".carplay.transport.TransportCheckActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout"
+            android:exported="true"
+            android:label="Transport check"
+            android:taskAffinity="me.ri3d.openauto.transportcheck">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
