@@ -76,10 +76,10 @@
     <string name="minimize_close">Close app</string>
     <string name="minimize_off">Hidden</string>
     <string name="set_small_tile">Tile above Settings</string>
-    <string name="set_small_tile_desc">What the small tile on the start screen offers. CarPlay is not available yet; its tile only says so</string>
+    <string name="set_small_tile_desc">What the small tile on the start screen offers</string>
     <string name="carplay">CarPlay</string>
-    <string name="carplay_sub">Not available yet</string>
-    <string name="carplay_info">CarPlay is in preparation and cannot be started yet. What exists so far is the accessory side of the iAP2 link and its authentication, without an accessory identity and without projection. Nothing was started.</string>
+    <string name="carplay_sub">iPhone · USB or wireless</string>
+    <string name="carplay_info">Open CarPlay to connect an iPhone over USB or wireless. This receiver is experimental; use Receiver check and Connection log for local diagnostics.</string>
 
     <!-- Video -->
     <string name="set_resolution">Resolution</string>

@@ -2,6 +2,81 @@
 
 Evidence is kept in four separate classes. Nothing in one class implies another.
 
+## CarPlay integration, 2026-10-22
+
+The sections below this one retain the earlier Android Auto and Java diagnostic results. The new
+CarPlay receiver adapts DiPlay commit `143f4674b60b564a16baae5110b3b90fb7277631`; it does not
+inherit DiPlay's physical test results. Setup, identity provenance and limitations are in
+[CARPLAY.md](CARPLAY.md) and [CARPLAY-NOTICES.md](CARPLAY-NOTICES.md).
+
+| Check | Current evidence |
+|---|---|
+| Full JVM regression run | 86 suites, 485 tests: 482 passed, 3 existing opt-in skips, 0 failures/errors. Includes the existing Android Auto and Java CarPlay tests |
+| Debug and release lint | 0 errors, 38 warnings each. API and permission checks remain fatal |
+| Debug and signed release APKs | R8 builds pass; version `0.6.0-carplay1`, versionCode 7, minSdk 16, targetSdk 36, ARMv7/ARM64/x86/x86_64 native shims |
+| Synthetic AirPlay peer | SRP pair-setup, stored controller pair-verify, encrypted control, synthetic P-256 MFiSAP signature, /info and authenticated SETUP/RECORD pass over real loopback sockets. Unknown/altered keys and unauthenticated stream setup are rejected |
+| Stream/media boundaries | Annex B input, malformed avcC rejection, authenticated packets, audio formats including advertised compatibility, touch release, bounded queues, first-frame reconnect and cross-session output ownership regressions pass |
+| Transport and cleanup | USBMUX/Lockdown framing and pairing, conservative API 16 descriptor mapping, NCM, saved pair records, cancellation, intentional Bluetooth handoff close and complete-boundary inbound iAP EOF regressions pass |
+| Credential/diagnostic boundaries | Credential message bodies are redacted before parsing/raw previews; shared-reference plist graphs do not expand into logs; runtime identity is never replaced by test-generated material |
+| Scoped certificate parsing | BC 1.86 empty-issuer Lockdown profile concession is thread-local and restores the previous effective policy, including nested/error cases. Wrong peer public keys remain rejected; another thread keeps strict parsing |
+| API 16 shrunk release local check | Selected accessory identity loads, signs and generates MFiSAP response; pairing keys, ChaCha/Ed25519, binary protocol and software Opus checks pass on Dalvik x86 |
+| API 16 production USB TLS engine, synthetic peer | Exact packaged release completes TLS 1.2 / ECDHE-RSA-AES128-GCM-SHA256 with mutually pinned synthetic identities, application bytes in both directions and direct socket closure. No USB or iPhone is involved |
+| API 16 setup/lifecycle | Activity resumes; UI hierarchy contains controls within 1024x600 bounds. Wireless without a paired phone explains the requirement. USB consent reaches the wait state; Disconnect returns to idle, re-enables connection buttons and removes the projection service, with no AndroidRuntime crash |
+| Physical iPhone/radio | **NEEDS VERIFICATION**: no physical iPhone, Bluetooth adapter or USB/NCM device was available for this integration run |
+
+The selected public-preview identity is packaged only through the ignored local asset directory.
+It is an authentication input, not proof of Apple certification or acceptance. Synthetic TLS,
+pairing and media peers are likewise not iPhones. Emulator x86 execution does not prove sustained
+ARMv7 codec speed, audio routing, camera/radio USB behavior or operation within 256 MiB total RAM.
+
+The runtime test caught and corrected issues that the host JVM did not reproduce: reflective
+provider classes removed by R8, Dalvik constructor-time random seeding, provider-specific default
+entropy lookup, and Android 4.1's legacy RSA certificate algorithm names. The final local provider
+canonicalizes only SHA-256/384/512 RSA PKCS#1 signature OIDs with valid absent/DER-NULL parameters;
+BC algorithm constraints and the paired public-key pin stay active. The diagnostic's RSA alias
+selection also handles the older ECDHE_RSA key-manager request.
+
+Final artifact: `dist/openauto-0.6.0-carplay1-release.apk`, 1,570,028 bytes. `apksigner verify`
+passes v1 and v2 signatures; the signer matches the existing 0.5.0 release. There is one
+`classes.dex`; minSdk 16 and all four existing ABI shims are retained. The packaging helper was
+executed successfully with `-UseDiPlayPreviewIdentity -Variant Release`.
+
+SHA-256:
+
+```text
+fc714f4f6b13f172049edbe4758b1422b1e6d88d787eb5a8aa612410287bf285
+```
+
+The installed packaged release reported:
+
+```text
+Platform API 16
+PASS: Accessory identity
+PASS: AirPlay encryption and pairing keys
+PASS: Binary protocol
+PASS: Software microphone codec
+LOCAL SYNTHETIC ONLY: TLSv1.2 TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256; mutual pinned identities; application bytes both ways; direct close passed
+PASS: USB TLS loopback (synthetic)
+CHECK COMPLETE — local checks only; connect an iPhone for projection verification
+```
+
+The emulator's GPU screenshot capture returned black pixels even for Android's home screen.
+Setup/lifecycle evidence above comes from actual UI hierarchy, button interactions, activity and
+service state, and logcat; this run does not claim a visual screenshot review.
+
+Build command:
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'
+$env:OPENAUTO_CARPLAY_ASSETS=Join-Path (Get-Location) 'build\carplay-runtime'
+.\gradlew.bat --offline :app:testDebugUnitTest :app:lintDebug :app:lintRelease :app:assembleDebug :app:assembleRelease
+```
+
+The old default-skip set is unchanged: `FakePhoneServerTest.serve`, `RealPhoneProbeTest.probe`,
+and `H264Test.rewriteFile`. Test XML is under `app/build/test-results/testDebugUnitTest`; lint
+reports are under `app/build/reports`. The reproducible packaging helper is
+`tools/build-carplay.ps1`.
+
 ## 1. Build and static checks
 
 | Check | Result | Command |

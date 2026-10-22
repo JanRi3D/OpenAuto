@@ -159,6 +159,7 @@ public final class ConnectionManager implements Session.Listener {
     }
 
     private void setPhase(Phase p, String d) {
+        if (p == Phase.IDLE || p == Phase.ERROR) me.ri3d.openauto.carplay.ProjectionOwnership.release("androidauto");
         boolean resumed = p == Phase.PROJECTING && phase != Phase.PROJECTING;
         phase = p;
         detail = d;
@@ -213,6 +214,10 @@ public final class ConnectionManager implements Session.Listener {
     /** Starts the wired flow with the given device, or with the first candidate found. */
     public void connectUsb(UsbDevice device) {
         if (isBusy()) return;
+        if (!me.ri3d.openauto.carplay.ProjectionOwnership.acquire("androidauto")) {
+            setPhase(Phase.ERROR, "Disconnect CarPlay before starting Android Auto");
+            return;
+        }
         userStopped = false;
         retries = 0;
         usbMode = true;
@@ -381,6 +386,10 @@ public final class ConnectionManager implements Session.Listener {
     /** Manual Wi-Fi mode and Self Mode: connect to a phone whose head-unit server is listening. */
     public void connectTcp(final String host, final int port) {
         if (isBusy()) return;
+        if (!me.ri3d.openauto.carplay.ProjectionOwnership.acquire("androidauto")) {
+            setPhase(Phase.ERROR, "Disconnect CarPlay before starting Android Auto");
+            return;
+        }
         userStopped = false;
         retries = 0;
         usbMode = false;
@@ -415,6 +424,10 @@ public final class ConnectionManager implements Session.Listener {
     @SuppressLint("MissingPermission") // Perms.hasBluetooth() checked first
     public void startWireless() {
         if (isBusy()) return;
+        if (!me.ri3d.openauto.carplay.ProjectionOwnership.acquire("androidauto")) {
+            setPhase(Phase.ERROR, "Disconnect CarPlay before starting Android Auto");
+            return;
+        }
         userStopped = false;
         retries = 0;
         usbMode = false;

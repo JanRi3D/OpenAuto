@@ -1,7 +1,8 @@
 # Dependencies
 
-Everything else is the Android platform API (minSdk 16) and the Java standard library. No AndroidX, no
-Kotlin. One small piece of native code (below) that bundles no third-party library.
+The app uses the Android platform API (minSdk 16), Java, and Kotlin for the adapted CarPlay
+components. There is no AndroidX or Compose runtime. One small piece of native code (below)
+bundles no third-party library.
 
 ## Native shim over the device's own OpenSSL (`app/src/main/cpp/systls.c`, about 300 lines of C)
 
@@ -48,9 +49,11 @@ Kotlin. One small piece of native code (below) that bundles no third-party libra
     is unknown) and threw a `RuntimeException` inside the handshake thread.
   - BouncyCastle's non-blocking `TlsClientProtocol` is pure Java, parses certificates itself, and makes
     the record-to-frame mapping deterministic (`offerInput`/`readInput`, `writeApplicationData`/`readOutput`).
-- **API 16 compatibility.** The `jdk15to18` artifacts are built for Java 5–8 bytecode and use no
-  Java 8 library APIs that need desugaring. Only the lightweight API is used; the JCE provider is
-  never registered. Verified by running the full session on the API 16 x86 emulator.
+- **API 16 compatibility.** The `jdk15to18` artifacts are built for Java 5–8 bytecode. Android Auto
+  uses the lightweight TLS API, verified by running its full session on the API 16 x86 emulator.
+  CarPlay pairing and media use lightweight cryptography. Its USB Lockdown path creates explicit
+  BC/BCJSSE provider instances without global provider registration and pins the paired phone's
+  public key. CarPlay's separate compatibility results are in [TEST-RESULTS.md](TEST-RESULTS.md).
 - **License and provenance.** Bouncy Castle License (MIT-style), Legion of the Bouncy Castle Inc.,
   published on Maven Central under `org.bouncycastle`; versions pinned in `gradle/libs.versions.toml`.
 - **APK size and memory impact.** Jars: bcprov 7.0 MiB, bctls 0.8 MiB, bcutil 0.8 MiB. After R8
@@ -67,6 +70,17 @@ Kotlin. One small piece of native code (below) that bundles no third-party libra
 ## Test-only
 
 - JUnit 4.13.2 (EPL 1.0): unit and integration tests on the JVM.
+- Robolectric 4.17: Android-facing transport tests on the JVM; not packaged in APKs.
+
+## CarPlay
+
+- Selected DiPlay/xcertplay sources at commit `143f4674b60b564a16baae5110b3b90fb7277631`
+  (GPL-3.0). Adapted for API 16, bounded media queues and platform-only UI.
+- Kotlin standard library: protocol implementation support; no coroutines or AndroidX runtime.
+- Concentus pure Java Opus (BSD): software microphone encoding and Opus audio decoding on old
+  Android versions. Source and license are vendored under `app/src/main/java/org/concentus`.
+- Optional accessory identity assets: omitted by default; public-preview experiment and exact
+  reference hash documented in [CARPLAY-NOTICES.md](CARPLAY-NOTICES.md).
 
 ## Assets (not code)
 

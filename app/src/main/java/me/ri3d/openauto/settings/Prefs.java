@@ -50,7 +50,7 @@ public final class Prefs {
     public boolean keepScreenOn() { return sp.getBoolean(KEEP_ON, true); }
     public String systemBars() { return sp.getString(SYSTEM_BARS, "notch"); }
     public String minimize() { return sp.getString(MINIMIZE, "minimize"); }
-    public String smallTile() { return sp.getString(SMALL_TILE, "self"); }
+    public String smallTile() { return sp.getString(SMALL_TILE, "carplay"); }
     public boolean autoStart() { return sp.getBoolean(AUTO_START, true); }
     public boolean audioMedia() { return sp.getBoolean(AUDIO_MEDIA, true); }
     public boolean audioSpeech() { return sp.getBoolean(AUDIO_SPEECH, true); }

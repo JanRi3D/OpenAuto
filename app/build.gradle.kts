@@ -13,8 +13,8 @@ android {
         applicationId = "me.ri3d.openauto"
         minSdk = 16
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.5.0"
+        versionCode = 7
+        versionName = "0.6.0-carplay1"
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
@@ -61,6 +61,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    testOptions {
+        // Imported protocol tests exercise real sockets/crypto; Android logging has no JVM output.
+        unitTests.isReturnDefaultValues = true
+    }
+    val carPlayAssets = providers.environmentVariable("OPENAUTO_CARPLAY_ASSETS").orNull
+    if (!carPlayAssets.isNullOrBlank()) {
+        sourceSets.getByName("main").assets.srcDir(carPlayAssets)
+    }
     lint {
         abortOnError = true
         // NewApi and MissingPermission stay fatal: they guard the API 16 baseline and runtime permissions.
@@ -80,4 +88,5 @@ dependencies {
     implementation(libs.bcprov)
     implementation(libs.bctls)
     testImplementation(libs.junit)
+    testImplementation("org.robolectric:robolectric:4.17")
 }

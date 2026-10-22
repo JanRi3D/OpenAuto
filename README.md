@@ -5,27 +5,28 @@
 <h1 align="center">OpenAuto</h1>
 
 <p align="center">
-  Android Auto on the Android car radio you already have, even an old and slow one.
+  Android Auto and experimental CarPlay on the Android car radio you already have.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Android-4.1%2B-3ddc84" alt="Android 4.1+">
   <img src="https://img.shields.io/badge/minSdk-16-blue" alt="minSdk 16">
-  <img src="https://img.shields.io/badge/APK-~1%20MB-f5b83d" alt="APK about 1 MB">
-  <img src="https://img.shields.io/badge/language-Java-orange" alt="Java">
+  <img src="https://img.shields.io/badge/CarPlay-experimental-f5b83d" alt="CarPlay experimental">
+  <img src="https://img.shields.io/badge/language-Java%20%2B%20Kotlin-orange" alt="Java and Kotlin">
 </p>
 
 <p align="center">
   <img src="docs/images/launcher.png" width="760" alt="OpenAuto launcher">
 </p>
 
-OpenAuto is an Android Auto receiver. Install it on an Android head unit, connect a phone, and the
-phone's Android Auto interface appears on the radio's screen with touch, music, navigation prompts
-and the microphone.
+OpenAuto is an Android Auto receiver with an experimental CarPlay receiver adapted from
+[DiPlay](https://github.com/shihabal3amri/DiPlay). Install it on an Android head unit and connect a
+phone. Android Auto has physical-phone results; CarPlay's local protocol and emulator checks still
+need an iPhone/radio run. See [CarPlay setup and test boundaries](docs/CARPLAY.md).
 
-It is written from scratch in Java against the plain platform APIs: no AndroidX, no Kotlin, no
-frameworks. That keeps the APK at about 1 MB and lets it run on Android 4.1 with a few hundred
-megabytes of RAM, the kind of radio that never got Android Auto from its manufacturer.
+The Android Auto implementation and launcher use Java and plain platform APIs. The CarPlay
+protocol uses selected Kotlin sources, Bouncy Castle and a pure Java Opus codec. There is no
+AndroidX or Compose runtime. Both receivers retain Android 4.1 (API 16) and ARMv7 support.
 
 > Not affiliated with or endorsed by Google. Android Auto is a trademark of Google LLC. Google does
 > not document the head-unit protocol; this implementation follows what open-source projects have
@@ -43,6 +44,7 @@ megabytes of RAM, the kind of radio that never got Android Auto from its manufac
 |---|---|
 | **Three ways to connect** | USB cable, Wi-Fi by IP address, or automatic wireless over Bluetooth and a hotspot (experimental) |
 | **Self Mode** | Runs against Android Auto on the same device (Android 9+) |
+| **Experimental CarPlay** | Separate CarPlay tile, wireless Bluetooth/Wi-Fi bootstrap, USBMUX/Lockdown/NCM, H.264, touch, audio and microphone; [setup and limits](docs/CARPLAY.md) |
 | **Video** | H.264 through the hardware decoder straight to the screen, 480p to 1080p, 30 or 60 fps |
 | **Any screen shape** | The phone lays out for the radio's aspect ratio, so wide 8:3 screens are filled without stretching |
 | **Audio** | Music, navigation prompts and the assistant, with ducking; microphone for voice commands |
@@ -61,7 +63,7 @@ megabytes of RAM, the kind of radio that never got Android Auto from its manufac
 1. Install the APK from [dist/](dist/) on the head unit:
 
    ```bash
-   adb install -r dist/openauto-0.5.0-release.apk
+   adb install -r dist/openauto-0.6.0-carplay1-release.apk
    ```
 
 2. Plug the phone into the radio's USB port and tap **Wired**. Confirm the two USB dialogs; tick
@@ -69,6 +71,8 @@ megabytes of RAM, the kind of radio that never got Android Auto from its manufac
 3. Android Auto starts on the phone and shows up on the radio.
 
 No USB port that Android can see? Use [Wi-Fi](#wireless-by-ip-address) instead.
+
+For an iPhone, open **CarPlay** and follow [the USB or wireless instructions](docs/CARPLAY.md).
 
 ## Connecting a phone
 
@@ -162,6 +166,7 @@ dependencies. More in the [design notes](docs/DESIGN.md) and the
 | Video, touch, media audio | Work; 30 fps on the emulators |
 | Automatic wireless | Implemented, not yet verified with a phone |
 | Microphone | Channel works; capture not yet exercised with the assistant |
+| CarPlay | Implemented and checked locally; physical iPhone projection remains unverified |
 | Phone calls, steering-wheel keys, start on boot | Not implemented |
 
 The latest fixes (video artifacts, sound without picture on USB, USB permission wait) are verified
@@ -200,6 +205,10 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`. `assembleRelease` signs the
 `keystore.properties` file (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) sits next to
 `settings.gradle.kts`; without it the release build stays unsigned.
 
+CarPlay source builds omit the accessory identity. The reproducible experimental build helper and
+identity provenance are documented in [docs/CARPLAY.md](docs/CARPLAY.md) and
+[docs/CARPLAY-NOTICES.md](docs/CARPLAY-NOTICES.md).
+
 Pushing a `v*` tag runs [the release workflow](.github/workflows/release.yml), which builds the signed
 APK from the `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD` repository secrets
 and attaches it to the GitHub release.
@@ -226,6 +235,8 @@ production session against a real phone from the build machine and traces every 
 | `wireless/` | Bluetooth credential exchange, hotspot |
 | `ui/`, `settings/`, `diag/` | views, settings rows, diagnostics |
 | `src/main/cpp/` | JNI shim over the system's OpenSSL |
+| `carplay/`, `com/shilapi/xcertplay/` | CarPlay app adapters and adapted DiPlay receiver components |
+| `org/concentus/` | BSD-licensed pure Java Opus codec |
 
 Documentation: [design notes](docs/DESIGN.md) · [dependencies](docs/DEPENDENCIES.md) ·
 [protocol reference](docs/protocol-reference.md) · [feature status](docs/STATUS.md) ·
@@ -235,7 +246,7 @@ Documentation: [design notes](docs/DESIGN.md) · [dependencies](docs/DEPENDENCIE
 
 - No way of cropping the video margins works on every device, which is why Video output is a
   setting (docs/TEST-RESULTS.md §3a, §3b).
-- Single-pointer touch; pinch gestures are not sent.
+- Android Auto uses single-pointer touch. CarPlay uses its own contact mapping.
 - The client certificate the phone requires is the one all open-source receivers embed; see
   docs/DESIGN.md §1. It is a replaceable asset under `app/src/main/assets/tls/`.
 - Text is English only.
@@ -249,3 +260,6 @@ The protocol knowledge comes from [aasdk](https://github.com/f1xpl/aasdk) and
 [headunit](https://github.com/mikereidis/headunit). The implementation is independent of them; the
 head-unit certificate is the one aasdk publishes.
 Fonts: Barlow (SIL Open Font License). TLS: Bouncy Castle.
+
+CarPlay sources: DiPlay/xcertplay (GPL-3.0), with upstream LIVI and Showcase research credits.
+Software Opus: Concentus (BSD). See [third-party notices](THIRD_PARTY_NOTICES.md).

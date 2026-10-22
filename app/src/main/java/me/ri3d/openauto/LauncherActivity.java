@@ -73,6 +73,16 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
      */
     private void handleUsbIntent(Intent intent) {
         if (intent == null) return;
+        if (intent.getBooleanExtra("open_carplay", false)) {
+            intent.removeExtra("open_carplay");
+            onCarPlay();
+            return;
+        }
+        if (intent.getBooleanExtra("carplay_check", false)) {
+            intent.removeExtra("carplay_check");
+            startActivity(new Intent(this, me.ri3d.openauto.carplay.CarPlayCheckActivity.class));
+            return;
+        }
         if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(intent.getAction())) {
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
             if (device != null && prefs.autoStart()) onWired(device);
@@ -198,9 +208,9 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         }
     }
 
-    /** CarPlay is not implemented; the tile says so instead of pretending to start anything. */
+    /** CarPlay owns its setup and projection lifecycle. */
     private void onCarPlay() {
-        Dialogs.info(this, getString(R.string.carplay), getString(R.string.carplay_info));
+        startActivity(new Intent(this, me.ri3d.openauto.carplay.CarPlayActivity.class));
     }
 
     private void onSelfMode() {
