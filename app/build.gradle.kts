@@ -13,8 +13,8 @@ android {
         applicationId = "me.ri3d.openauto"
         minSdk = 16
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.4.0"
+        versionCode = 6
+        versionName = "0.5.0"
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
