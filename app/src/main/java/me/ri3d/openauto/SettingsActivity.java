@@ -146,6 +146,10 @@ public class SettingsActivity extends Activity {
         add(Rows.choice(this, s(R.string.set_minimize), s(R.string.set_minimize_desc),
                 new CharSequence[]{s(R.string.minimize), s(R.string.minimize_close), s(R.string.minimize_off)},
                 Math.max(0, indexOf(minimize, prefs.minimize())), null, i -> prefs.put(Prefs.MINIMIZE, minimize[i])));
+        String[] tiles = {"self", "carplay"};
+        add(Rows.choice(this, s(R.string.set_small_tile), s(R.string.set_small_tile_desc),
+                new CharSequence[]{s(R.string.self_mode), s(R.string.carplay)},
+                Math.max(0, indexOf(tiles, prefs.smallTile())), null, i -> prefs.put(Prefs.SMALL_TILE, tiles[i])));
         add(Rows.action(this, s(R.string.set_diagnostics), s(R.string.set_diagnostics_desc), v -> show(DIAGNOSTICS)));
         add(Rows.action(this, s(R.string.set_reset), s(R.string.set_reset_desc), v -> {
             prefs.reset();

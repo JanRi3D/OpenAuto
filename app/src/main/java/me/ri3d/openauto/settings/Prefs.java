@@ -15,6 +15,7 @@ public final class Prefs {
     public static final String KEEP_ON = "keep_screen_on";
     public static final String SYSTEM_BARS = "system_bars"; // notch | status | full | normal
     public static final String MINIMIZE = "minimize";        // minimize | close | off
+    public static final String SMALL_TILE = "small_tile";    // self | carplay: the tile above Settings on the start screen
     public static final String AUTO_START = "auto_start";
     public static final String AUDIO_MEDIA = "audio_media";
     public static final String AUDIO_SPEECH = "audio_speech";
@@ -49,6 +50,7 @@ public final class Prefs {
     public boolean keepScreenOn() { return sp.getBoolean(KEEP_ON, true); }
     public String systemBars() { return sp.getString(SYSTEM_BARS, "notch"); }
     public String minimize() { return sp.getString(MINIMIZE, "minimize"); }
+    public String smallTile() { return sp.getString(SMALL_TILE, "self"); }
     public boolean autoStart() { return sp.getBoolean(AUTO_START, true); }
     public boolean audioMedia() { return sp.getBoolean(AUDIO_MEDIA, true); }
     public boolean audioSpeech() { return sp.getBoolean(AUDIO_SPEECH, true); }
