@@ -75,11 +75,6 @@
     <string name="minimize">Minimize</string>
     <string name="minimize_close">Close app</string>
     <string name="minimize_off">Hidden</string>
-    <string name="set_small_tile">Tile above Settings</string>
-    <string name="set_small_tile_desc">What the small tile on the start screen offers</string>
-    <string name="carplay">CarPlay</string>
-    <string name="carplay_sub">iPhone · USB or wireless</string>
-    <string name="carplay_info">Open CarPlay to connect an iPhone over USB or wireless. This receiver is experimental; use Receiver check and Connection log for local diagnostics.</string>
 
     <!-- Video -->
     <string name="set_resolution">Resolution</string>

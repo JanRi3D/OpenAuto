@@ -48,12 +48,11 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
 
         setMain(wireless, IconView.WIFI, R.string.wireless);
         setMain(wired, IconView.USB, R.string.wired);
+        setSmall(self, IconView.SELF, R.string.self_mode, R.string.self_mode_sub);
         setSmall(settings, IconView.SLIDERS, R.string.settings, R.string.settings_sub);
 
         settings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
-        self.setOnClickListener(v -> {
-            if ("carplay".equals(prefs.smallTile())) onCarPlay(); else onSelfMode();
-        });
+        self.setOnClickListener(v -> onSelfMode());
         wireless.setOnClickListener(v -> onWireless());
         wired.setOnClickListener(v -> onWired(null));
         minimize.setOnClickListener(v -> onMinimize());
@@ -73,16 +72,6 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
      */
     private void handleUsbIntent(Intent intent) {
         if (intent == null) return;
-        if (intent.getBooleanExtra("open_carplay", false)) {
-            intent.removeExtra("open_carplay");
-            onCarPlay();
-            return;
-        }
-        if (intent.getBooleanExtra("carplay_check", false)) {
-            intent.removeExtra("carplay_check");
-            startActivity(new Intent(this, me.ri3d.openauto.carplay.CarPlayCheckActivity.class));
-            return;
-        }
         if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(intent.getAction())) {
             UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
             if (device != null && prefs.autoStart()) onWired(device);
@@ -114,11 +103,6 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         String action = prefs.minimize();
         minimize.setVisibility("off".equals(action) ? View.GONE : View.VISIBLE);
         ((IconView) minimize.findViewById(R.id.minimize_icon)).setIcon("close".equals(action) ? IconView.CLOSE : IconView.MINIMIZE);
-        if ("carplay".equals(prefs.smallTile())) {
-            setSmall(self, IconView.PHONE, R.string.carplay, R.string.carplay_sub);
-        } else {
-            setSmall(self, IconView.SELF, R.string.self_mode, R.string.self_mode_sub);
-        }
         cm.addListener(this);
         render();
     }
@@ -206,11 +190,6 @@ public class LauncherActivity extends Activity implements ConnectionManager.List
         } else {
             moveTaskToBack(true);
         }
-    }
-
-    /** CarPlay owns its setup and projection lifecycle. */
-    private void onCarPlay() {
-        startActivity(new Intent(this, me.ri3d.openauto.carplay.CarPlayActivity.class));
     }
 
     private void onSelfMode() {

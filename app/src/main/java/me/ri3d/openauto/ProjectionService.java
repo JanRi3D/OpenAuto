@@ -40,9 +40,7 @@ public class ProjectionService extends Service {
 
     @SuppressWarnings("deprecation")
     private Notification buildNotification() {
-        Class<?> destination = "carplay".equals(me.ri3d.openauto.carplay.ProjectionOwnership.owner())
-                ? me.ri3d.openauto.carplay.CarPlayActivity.class : ProjectionActivity.class;
-        Intent open = new Intent(this, destination);
+        Intent open = new Intent(this, ProjectionActivity.class);
         int piFlags = Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0;
         PendingIntent pi = PendingIntent.getActivity(this, 0, open, piFlags);
         Notification.Builder b;
