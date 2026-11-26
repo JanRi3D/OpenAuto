@@ -13,6 +13,7 @@
   <img src="https://img.shields.io/badge/minSdk-16-blue" alt="minSdk 16">
   <img src="https://img.shields.io/badge/APK-~1%20MB-f5b83d" alt="APK about 1 MB">
   <img src="https://img.shields.io/badge/language-Java-orange" alt="Java">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
 </p>
 
 <p align="center">
@@ -35,7 +36,8 @@ megabytes of RAM, the kind of radio that never got Android Auto from its manufac
 
 [Features](#features) · [Quick start](#quick-start) · [Connecting a phone](#connecting-a-phone) ·
 [Settings](#settings) · [How it works](#how-it-works) · [Status](#status) ·
-[Troubleshooting](#troubleshooting) · [Building](#building) · [Development](#development)
+[Troubleshooting](#troubleshooting) · [Building](#building) · [Development](#development) ·
+[License](#license)
 
 ## Features
 
@@ -249,3 +251,17 @@ The protocol knowledge comes from [aasdk](https://github.com/f1xpl/aasdk) and
 [headunit](https://github.com/mikereidis/headunit). The implementation is independent of them; the
 head-unit certificate is the one aasdk publishes.
 Fonts: Barlow (SIL Open Font License). TLS: Bouncy Castle.
+
+## License
+
+OpenAuto is released under the [MIT License](LICENSE). It covers the source in this repository and
+every release except one. You may share the APK, for example as a mirror, as long as the license
+text goes with it.
+
+The exception is the v0.6.0-carplay1 release, together with the commits that carried its CarPlay
+receiver. That code was adapted from DiPlay/xcertplay and stays under GPL-3.0. CarPlay has since
+been removed, and the current source and later releases contain no GPL code.
+
+Bouncy Castle and the Barlow fonts keep their own licenses, and the head-unit TLS certificate is
+the one aasdk publishes; see [third-party notices](THIRD_PARTY_NOTICES.md). Android Auto is a
+trademark of Google LLC; the license grants no rights to the name.
